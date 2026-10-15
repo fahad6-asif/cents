@@ -1,13 +1,23 @@
 "use client";
 
+import type { RefObject } from "react";
 import { ArrowRight, Sparkle } from "lucide-react";
 
-// Phase 1: static shell in its mandated position. Conversation behavior arrives in Phase 6.
-export function ChatBox() {
+type Props = {
+  draft?: string;
+  onDraftChange?: (value: string) => void;
+  inputRef?: RefObject<HTMLTextAreaElement | null>;
+};
+
+// Phase 5: controlled draft (Worth a look can prefill it). Sending + the thread arrive in Phase 6.
+export function ChatBox({ draft, onDraftChange, inputRef }: Props) {
   return (
     <section aria-label="Assistant" className="card flex min-h-[130px] flex-col pt-[25px] pr-[15px] pb-[14px] pl-5">
       <textarea
+        ref={inputRef}
         rows={1}
+        value={draft}
+        onChange={(e) => onDraftChange?.(e.target.value)}
         placeholder="Ask anything about your money"
         className="w-full resize-none bg-transparent pr-1 text-[18px] leading-[24px] text-text outline-none placeholder:text-placeholder"
       />

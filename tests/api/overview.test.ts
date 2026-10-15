@@ -2,14 +2,16 @@ import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import { accounts, transactions } from "@/lib/db/schema";
+import { loadWorthALook } from "@/lib/db/alerts-view";
 import { loadSessionData } from "@/lib/db/queries";
 import { ensureSession } from "@/lib/db/sessions";
+import { runChecks } from "@/lib/engine/checks";
 import type { Db } from "@/lib/db/types";
 import { categorySpend, spendingBreakdown } from "@/lib/domain/budgets";
 import { balanceAt, balanceSeries, monthToDate } from "@/lib/domain/summary";
 import { buildOverview } from "@/lib/overview";
 import { SEED_END, generateSeed } from "@/seed/generate";
-import { createTestDb } from "../helpers/db";
+import { TODAY_FOR_TESTS, createTestDb } from "../helpers/db";
 
 const TODAY = SEED_END;
 let db: Db;
@@ -28,8 +30,8 @@ const opening = seed.account.openingBalanceCents;
 describe("overview payload", () => {
   it("matches the domain functions on the seed data", async () => {
     const id = randomUUID();
-    await ensureSession(db, id);
-    const o = buildOverview(await loadSessionData(db, id), TODAY, "1M", "Fahad");
+    await ensureSession(db, id, TODAY_FOR_TESTS);
+    const o = buildOverview(await loadSessionData(db, id), TODAY, "1M", "Fahad", await loadWorthALook(db, id));
 
     const mtd = monthToDate(seed.transactions, TODAY);
     expect(o.summary.balanceCents).toBe(balanceAt(opening, seed.transactions, TODAY));
@@ -55,8 +57,8 @@ describe("overview payload", () => {
 
   it("uses one net figure for 'ahead', the balance delta and Cash flow → Net", async () => {
     const id = randomUUID();
-    await ensureSession(db, id);
-    const o = buildOverview(await loadSessionData(db, id), TODAY, "1M", "Fahad");
+    await ensureSession(db, id, TODAY_FOR_TESTS);
+    const o = buildOverview(await loadSessionData(db, id), TODAY, "1M", "Fahad", await loadWorthALook(db, id));
     expect(o.summary.balanceCents - o.summary.startOfMonthBalanceCents).toBe(o.summary.netCents);
     expect(o.cashFlow.inCents - o.cashFlow.outCents).toBe(o.summary.netCents);
   });
@@ -68,8 +70,8 @@ describe("overview payload", () => {
     ["1Y", 366],
   ] as const)("returns the %s series (%i points)", async (range, n) => {
     const id = randomUUID();
-    await ensureSession(db, id);
-    const o = buildOverview(await loadSessionData(db, id), TODAY, range, "Fahad");
+    await ensureSession(db, id, TODAY_FOR_TESTS);
+    const o = buildOverview(await loadSessionData(db, id), TODAY, range, "Fahad", await loadWorthALook(db, id));
     expect(o.series.range).toBe(range);
     expect(o.series.points).toHaveLength(n);
     expect(o.series.points.at(-1)!.balanceCents).toBe(o.summary.balanceCents);
@@ -77,7 +79,7 @@ describe("overview payload", () => {
 
   it("lists the 5 most recent transactions and flags simulated ones", async () => {
     const id = randomUUID();
-    await ensureSession(db, id);
+    await ensureSession(db, id, TODAY_FOR_TESTS);
     const [account] = await db.select().from(accounts).where(eq(accounts.sessionId, id));
     await db.insert(transactions).values({
       sessionId: id,
@@ -91,14 +93,15 @@ describe("overview payload", () => {
       simEventId: "restaurant",
       idempotencyKey: randomUUID(),
     });
-    const o = buildOverview(await loadSessionData(db, id), TODAY, "1M", "Fahad");
+    await runChecks(db, id, 0, TODAY);
+    const o = buildOverview(await loadSessionData(db, id), TODAY, "1M", "Fahad", await loadWorthALook(db, id));
     expect(o.recent).toHaveLength(5);
     expect(o.recent[0]).toMatchObject({ merchant: "Bella Napoli", amountCents: -6_000, simulated: true, date: TODAY });
     expect(o.recent.slice(1).every((r) => !r.simulated)).toBe(true);
 
     // Dining is now over budget: flagged on the spending card and surfaced as the top alert.
     expect(o.spending.rows.find((r) => r.name === "Dining")!.overBudget).toBe(true);
-    expect(o.worthALook!.top.type).toBe("budget_overrun");
+    expect(o.worthALook!.top).toMatchObject({ type: "budget_overrun", proposal: { amountCents: 2_500, from: "Shopping", to: "Dining" } });
     expect(o.summary.netCents).toBe(91_828 - 6_000);
   });
 });

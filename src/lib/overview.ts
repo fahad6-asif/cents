@@ -1,15 +1,20 @@
-import { evaluateAlerts } from "@/lib/domain/alerts";
 import { budgetStatuses, cashFlowBars, categorySpend, spendingBreakdown } from "@/lib/domain/budgets";
 import { dayOf, formatLongDate, formatShortDate, monthName, monthOf } from "@/lib/domain/dates";
 import { balanceSeries, summarize } from "@/lib/domain/summary";
 import type { SessionData } from "@/lib/db/queries";
-import type { OverviewData, RangeKey } from "./overview-types";
+import type { OverviewData, RangeKey, WorthALookView } from "./overview-types";
 
 const RECENT_COUNT = 5;
 
 /** Builds the Overview payload from one session's data. Every figure comes from the domain layer. */
-export function buildOverview(data: SessionData, today: string, range: RangeKey, userName: string): OverviewData {
-  const { txs, budgets, bills, account } = data;
+export function buildOverview(
+  data: SessionData,
+  today: string,
+  range: RangeKey,
+  userName: string,
+  worthALook: WorthALookView | null,
+): OverviewData {
+  const { txs, budgets, account } = data;
   const month = monthOf(today);
   const s = summarize(account.openingBalanceCents, txs, today);
   const bars = cashFlowBars(s.moneyInCents, s.moneyOutCents);
@@ -30,9 +35,6 @@ export function buildOverview(data: SessionData, today: string, range: RangeKey,
       amountCents: t.amountCents,
       simulated: t.source === "simulated",
     }));
-
-  // Phase 4: computed live from the rules. Phase 5 switches this to persisted alerts with actions.
-  const alerts = evaluateAlerts({ today, txs, budgets, bills });
 
   return {
     today,
@@ -59,11 +61,6 @@ export function buildOverview(data: SessionData, today: string, range: RangeKey,
         label: range === "1Y" ? `${formatShortDate(p.date)} ${p.date.slice(0, 4)}` : formatShortDate(p.date),
       })),
     },
-    worthALook: alerts.length
-      ? {
-          top: { type: alerts[0].type, title: alerts[0].title, body: alerts[0].body, facts: alerts[0].facts },
-          moreCount: alerts.length - 1,
-        }
-      : null,
+    worthALook,
   };
 }

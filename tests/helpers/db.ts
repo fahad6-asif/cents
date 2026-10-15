@@ -4,6 +4,10 @@ import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import * as schema from "@/lib/db/schema";
 import type { Db } from "@/lib/db/types";
+import { SEED_END } from "@/seed/generate";
+
+/** Simulated "today" for tests (the seed is designed for it). */
+export const TODAY_FOR_TESTS = SEED_END;
 
 /** Fresh in-process Postgres with the real migrations applied. */
 export async function createTestDb(): Promise<{ db: Db; close: () => Promise<void> }> {

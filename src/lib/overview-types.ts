@@ -5,11 +5,25 @@ export type RangeKey = (typeof RANGE_KEYS)[number];
 
 export type SeriesPoint = { date: string; label: string; balanceCents: number };
 
-export type WorthALookItem = {
-  type: "budget_overrun" | "unusual_spending" | "budget_warning" | "upcoming_bill";
-  title: string;
-  body: string;
-  facts: Record<string, string | number>;
+export type WorthALookView = {
+  top: {
+    id: string;
+    type: "budget_overrun" | "unusual_spending" | "budget_warning" | "upcoming_bill";
+    title: string;
+    body: string;
+    /** Deterministic numbers behind the alert. */
+    facts: Record<string, string | number>;
+    /** Pending reallocation attached to an overrun ("Move $25 to Dining"). */
+    proposal: null | {
+      id: string;
+      amountCents: number;
+      from: string;
+      to: string;
+      newLimitCents: number;
+      rationale: string;
+    };
+  };
+  moreCount: number;
 };
 
 export type OverviewData = {
@@ -42,5 +56,5 @@ export type OverviewData = {
     simulated: boolean;
   }[];
   series: { range: RangeKey; points: SeriesPoint[] };
-  worthALook: { top: WorthALookItem; moreCount: number } | null;
+  worthALook: WorthALookView | null;
 };

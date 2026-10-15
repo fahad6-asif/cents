@@ -5,7 +5,7 @@ import { accounts, agentActions, alerts, auditLog, budgets, chatMessages, sessio
 import { ensureSession, resetSession } from "@/lib/db/sessions";
 import type { Db } from "@/lib/db/types";
 import { generateSeed } from "@/seed/generate";
-import { createTestDb, sessionSnapshot } from "../helpers/db";
+import { TODAY_FOR_TESTS, createTestDb, sessionSnapshot } from "../helpers/db";
 
 let db: Db;
 let close: () => Promise<void>;
@@ -35,7 +35,7 @@ async function addTransaction(sessionId: string) {
 describe("sessions", () => {
   it("clones the full seed for a new session", async () => {
     const id = randomUUID();
-    const info = await ensureSession(db, id);
+    const info = await ensureSession(db, id, TODAY_FOR_TESTS);
     expect(info).toEqual({ id, epoch: 0, created: true });
     const snap = await sessionSnapshot(db, id);
     expect(snap.transactions).toHaveLength(seed.transactions.length);
@@ -46,8 +46,8 @@ describe("sessions", () => {
 
   it("does not re-seed an existing session", async () => {
     const id = randomUUID();
-    await ensureSession(db, id);
-    const again = await ensureSession(db, id);
+    await ensureSession(db, id, TODAY_FOR_TESTS);
+    const again = await ensureSession(db, id, TODAY_FOR_TESTS);
     expect(again.created).toBe(false);
     expect((await sessionSnapshot(db, id)).transactions).toHaveLength(seed.transactions.length);
   });
@@ -55,8 +55,8 @@ describe("sessions", () => {
   it("isolates sessions: changing A leaves B untouched", async () => {
     const a = randomUUID();
     const b = randomUUID();
-    await ensureSession(db, a);
-    await ensureSession(db, b);
+    await ensureSession(db, a, TODAY_FOR_TESTS);
+    await ensureSession(db, b, TODAY_FOR_TESTS);
     const before = JSON.stringify(await sessionSnapshot(db, b));
 
     await addTransaction(a);
@@ -71,7 +71,7 @@ describe("sessions", () => {
 
   it("enforces one transaction per (session, idempotency key)", async () => {
     const id = randomUUID();
-    await ensureSession(db, id);
+    await ensureSession(db, id, TODAY_FOR_TESTS);
     const [account] = await db.select().from(accounts).where(eq(accounts.sessionId, id));
     const row = {
       sessionId: id,
@@ -90,7 +90,7 @@ describe("sessions", () => {
 
   it("reset restores the exact seed state, bumps the epoch and keeps the audit log", async () => {
     const id = randomUUID();
-    await ensureSession(db, id);
+    await ensureSession(db, id, TODAY_FOR_TESTS);
     const pristine = JSON.stringify(await sessionSnapshot(db, id));
 
     // Mutate everything a demo can touch.
@@ -114,7 +114,7 @@ describe("sessions", () => {
     await db.insert(chatMessages).values({ sessionId: id, role: "user", content: "hi" });
     expect(JSON.stringify(await sessionSnapshot(db, id))).not.toBe(pristine);
 
-    const { epoch } = await resetSession(db, id);
+    const { epoch } = await resetSession(db, id, TODAY_FOR_TESTS);
     expect(epoch).toBe(1);
     expect(JSON.stringify(await sessionSnapshot(db, id))).toBe(pristine);
 
@@ -125,6 +125,6 @@ describe("sessions", () => {
   });
 
   it("refuses to reset an unknown session", async () => {
-    await expect(resetSession(db, randomUUID())).rejects.toThrow();
+    await expect(resetSession(db, randomUUID(), TODAY_FOR_TESTS)).rejects.toThrow();
   });
 });

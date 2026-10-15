@@ -1,10 +1,16 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-type Props = { body: string; primaryLabel: string; moreCount: number; onPrimary?: () => void; onDismiss?: () => void };
+type Props = {
+  body: string;
+  primaryLabel: string;
+  moreCount: number;
+  busy?: boolean;
+  onPrimary?: () => void;
+  onDismiss?: () => void;
+};
 
-// Phase 4: shows the top alert. Approve / dismiss / ask-assistant actions are wired in Phases 5–7.
-export function WorthALook({ body, primaryLabel, moreCount, onPrimary, onDismiss }: Props) {
+export function WorthALook({ body, primaryLabel, moreCount, busy, onPrimary, onDismiss }: Props) {
   return (
     <section className="card flex flex-col gap-4 px-6 py-[17px] md:min-h-[102px] md:flex-row md:items-center md:gap-10">
       <div className="min-w-0 flex-1">
@@ -23,6 +29,8 @@ export function WorthALook({ body, primaryLabel, moreCount, onPrimary, onDismiss
       <div className="flex shrink-0 gap-[10px]">
         <Button
           onClick={onPrimary}
+          disabled={busy}
+          data-testid="worth-primary"
           className="h-[43px] rounded-[9px] border-0 bg-brand px-[18px] text-[14px] font-semibold text-white hover:bg-brand-hover"
         >
           {primaryLabel}
@@ -30,6 +38,8 @@ export function WorthALook({ body, primaryLabel, moreCount, onPrimary, onDismiss
         <Button
           variant="outline"
           onClick={onDismiss}
+          disabled={busy}
+          data-testid="worth-dismiss"
           className="h-[43px] rounded-[9px] border-line bg-surface px-[17px] text-[14px] font-medium text-text hover:bg-muted-fill"
         >
           Not now

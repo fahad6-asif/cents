@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 import { getDb } from "./db/client";
 import { ensureSession, type SessionInfo } from "./db/sessions";
+import { simToday } from "./sim";
 
 export const SESSION_COOKIE = "cents_session";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -18,5 +19,5 @@ export function isSessionId(value: string | undefined): value is string {
 export const currentSession = cache(async (): Promise<SessionInfo | null> => {
   const id = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!isSessionId(id)) return null;
-  return ensureSession(getDb(), id);
+  return ensureSession(getDb(), id, simToday());
 });
