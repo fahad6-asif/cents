@@ -15,7 +15,7 @@ export function OverviewHeader({ dateLabel, name, netCents }: Props) {
         </div>
         <p className="mt-[7px] text-[15px] leading-[21px] text-text-secondary">
           You are{" "}
-          <span className={ahead ? "font-semibold text-brand" : "font-semibold text-danger"}>
+          <span data-testid="ahead-amount" className={ahead ? "font-semibold text-brand" : "font-semibold text-danger"}>
             {formatUSD(Math.abs(netCents), { whole: true })} {ahead ? "ahead" : "behind"}
           </span>{" "}
           this month.

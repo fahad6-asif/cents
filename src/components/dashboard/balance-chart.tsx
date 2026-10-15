@@ -2,10 +2,9 @@
 
 import { Line, LineChart, ResponsiveContainer, Tooltip, YAxis } from "recharts";
 import { formatUSD } from "@/lib/domain/money";
+import type { SeriesPoint } from "@/lib/overview-types";
 
-export type BalancePoint = { date: string; label: string; balanceCents: number };
-
-function ChartTooltip({ active, payload }: { active?: boolean; payload?: { payload: BalancePoint }[] }) {
+function ChartTooltip({ active, payload }: { active?: boolean; payload?: { payload: SeriesPoint }[] }) {
   if (!active || !payload?.length) return null;
   const p = payload[0].payload;
   return (
@@ -16,7 +15,7 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: { paylo
   );
 }
 
-export function BalanceChart({ points }: { points: BalancePoint[] }) {
+export function BalanceChart({ points }: { points: SeriesPoint[] }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={points} margin={{ top: 1, right: 0, bottom: 1, left: 0 }}>

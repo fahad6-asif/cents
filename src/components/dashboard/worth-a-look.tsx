@@ -1,21 +1,35 @@
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-type Props = { body: string; primaryLabel: string };
+type Props = { body: string; primaryLabel: string; moreCount: number; onPrimary?: () => void; onDismiss?: () => void };
 
-// Phase 1: static. The highest-severity alert and its actions are wired in Phase 5/7.
-export function WorthALook({ body, primaryLabel }: Props) {
+// Phase 4: shows the top alert. Approve / dismiss / ask-assistant actions are wired in Phases 5–7.
+export function WorthALook({ body, primaryLabel, moreCount, onPrimary, onDismiss }: Props) {
   return (
-    <section className="card flex flex-col gap-4 px-6 py-[17px] md:flex-row md:items-center md:gap-10">
+    <section className="card flex flex-col gap-4 px-6 py-[17px] md:min-h-[102px] md:flex-row md:items-center md:gap-10">
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] leading-[18px] text-text-muted">Worth a look</p>
-        <p className="mt-1 text-[15px] leading-[22px] text-text">{body}</p>
+        <p className="flex items-center gap-2 text-[13px] leading-[18px] text-text-muted">
+          Worth a look
+          {moreCount > 0 && (
+            <Link href="/insights" className="font-medium text-brand hover:underline">
+              +{moreCount} more
+            </Link>
+          )}
+        </p>
+        <p data-testid="worth-body" className="mt-1 text-[15px] leading-[22px] text-text">
+          {body}
+        </p>
       </div>
       <div className="flex shrink-0 gap-[10px]">
-        <Button className="h-[43px] rounded-[9px] border-0 bg-brand px-[18px] text-[14px] font-semibold text-white hover:bg-brand-hover">
+        <Button
+          onClick={onPrimary}
+          className="h-[43px] rounded-[9px] border-0 bg-brand px-[18px] text-[14px] font-semibold text-white hover:bg-brand-hover"
+        >
           {primaryLabel}
         </Button>
         <Button
           variant="outline"
+          onClick={onDismiss}
           className="h-[43px] rounded-[9px] border-line bg-surface px-[17px] text-[14px] font-medium text-text hover:bg-muted-fill"
         >
           Not now

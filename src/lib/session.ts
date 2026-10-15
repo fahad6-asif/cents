@@ -1,5 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
+import { cache } from "react";
 import { getDb } from "./db/client";
 import { ensureSession, type SessionInfo } from "./db/sessions";
 
@@ -11,11 +12,11 @@ export function isSessionId(value: string | undefined): value is string {
 }
 
 /**
- * The current visitor's session (seeded on first use). The cookie itself is issued by
- * src/proxy.ts, so every page and API request already carries a valid id here.
+ * The current visitor's session (seeded on first use), memoized per request. The cookie itself
+ * is issued by src/proxy.ts, so every page and API request already carries a valid id here.
  */
-export async function currentSession(): Promise<SessionInfo | null> {
+export const currentSession = cache(async (): Promise<SessionInfo | null> => {
   const id = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!isSessionId(id)) return null;
   return ensureSession(getDb(), id);
-}
+});

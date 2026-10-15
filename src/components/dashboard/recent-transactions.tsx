@@ -1,18 +1,10 @@
 import Link from "next/link";
 import { formatShortDate } from "@/lib/domain/dates";
 import { formatUSD } from "@/lib/domain/money";
+import type { OverviewData } from "@/lib/overview-types";
 import { cn } from "@/lib/utils";
 
-export type RecentTx = {
-  id: string;
-  merchant: string;
-  category: string;
-  date: string;
-  amountCents: number;
-  simulated?: boolean;
-};
-
-export function RecentTransactions({ rows }: { rows: RecentTx[] }) {
+export function RecentTransactions({ rows }: { rows: OverviewData["recent"] }) {
   return (
     <section className="card px-6 pt-[21px] pb-1.5">
       <div className="flex items-center justify-between pb-[7px]">
@@ -21,37 +13,39 @@ export function RecentTransactions({ rows }: { rows: RecentTx[] }) {
           View all
         </Link>
       </div>
-      <ul>
-        {rows.map((tx) => (
-          <li
-            key={tx.id}
-            className="grid h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 border-t border-line text-[14px] md:grid-cols-[39.4%_25.2%_minmax(0,1fr)_auto] md:gap-x-0"
-          >
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 truncate text-text">
-                <span className="truncate">{tx.merchant}</span>
-                {tx.simulated && (
-                  <span className="shrink-0 rounded-full border border-line px-1.5 text-[10px] leading-[16px] text-text-muted">
-                    Simulated
-                  </span>
-                )}
-              </div>
-              <div className="text-[12px] text-text-muted md:hidden">{formatShortDate(tx.date)}</div>
-            </div>
-            <div className="hidden md:block">
-              <span className="inline-flex h-[21px] items-center rounded-full bg-muted-fill px-[11px] text-[12px] text-text">
-                {tx.category}
-              </span>
-            </div>
-            <div className="hidden text-text-muted md:block">{formatShortDate(tx.date)}</div>
-            <div
-              className={cn("tabular text-right font-medium", tx.amountCents > 0 ? "text-brand" : "text-text")}
+      {rows.length === 0 ? (
+        <p className="border-t border-line py-5 text-[14px] text-text-muted">No transactions yet.</p>
+      ) : (
+        <ul>
+          {rows.map((tx) => (
+            <li
+              key={tx.id}
+              className="grid h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 border-t border-line text-[14px] md:grid-cols-[39.4%_25.2%_minmax(0,1fr)_auto] md:gap-x-0"
             >
-              {formatUSD(tx.amountCents, { plus: true })}
-            </div>
-          </li>
-        ))}
-      </ul>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 text-text">
+                  <span className="truncate">{tx.merchant}</span>
+                  {tx.simulated && (
+                    <span className="shrink-0 rounded-full border border-line px-1.5 text-[10px] leading-[16px] text-text-muted">
+                      Simulated
+                    </span>
+                  )}
+                </div>
+                <div className="text-[12px] text-text-muted md:hidden">{formatShortDate(tx.date)}</div>
+              </div>
+              <div className="hidden md:block">
+                <span className="inline-flex h-[21px] items-center rounded-full bg-muted-fill px-[11px] text-[12px] text-text">
+                  {tx.category}
+                </span>
+              </div>
+              <div className="hidden text-text-muted md:block">{formatShortDate(tx.date)}</div>
+              <div className={cn("tabular text-right font-medium", tx.amountCents > 0 ? "text-brand" : "text-text")}>
+                {formatUSD(tx.amountCents, { plus: true })}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
