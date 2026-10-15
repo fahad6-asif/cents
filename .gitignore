@@ -1,0 +1,31 @@
+# deps
+node_modules/
+
+# next
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# env
+.env*
+!.env.example
+
+# test output
+test-results/
+playwright-report/
+coverage/
+
+# local-only working files (never pushed)
+CLAUDE.md
+CLAUDE.local.md
+*.local.md
+PROGRESS.md
+.claude/
+docs/Cents_Build_Plan.md
+reference_images/
+
+# misc
+.vercel/
+.DS_Store
+*.log
