@@ -29,3 +29,9 @@ reference_images/
 .vercel/
 .DS_Store
 *.log
+AGENTS.md
+*.pem
+/build
+
+# comparisons that embed the reference image (local only)
+*side-by-side*
