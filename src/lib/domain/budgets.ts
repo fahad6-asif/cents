@@ -13,6 +13,18 @@ export function categorySpend(txs: readonly DomainTx[], month: string, untilDay?
   return totals;
 }
 
+/** Expense totals per category for days in [fromDay, toDay] (inclusive). */
+export function categorySpendBetween(txs: readonly DomainTx[], fromDay: string, toDay: string): Map<string, number> {
+  const totals = new Map<string, number>();
+  for (const t of txs) {
+    if (t.type !== "expense") continue;
+    const day = dayOf(t.occurredAt);
+    if (day < fromDay || day > toDay) continue;
+    totals.set(t.category, (totals.get(t.category) ?? 0) - t.amountCents);
+  }
+  return totals;
+}
+
 /** Spent ÷ limit. A zero limit is 0 when nothing is spent, otherwise unbounded. */
 export function utilization(spentCents: number, limitCents: number): number {
   if (limitCents <= 0) return spentCents > 0 ? Number.POSITIVE_INFINITY : 0;

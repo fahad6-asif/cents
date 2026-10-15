@@ -15,6 +15,13 @@
       "when": 1792089664284,
       "tag": "0001_enable_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792092089464,
+      "tag": "0002_chat_action_and_audit_index",
+      "breakpoints": true
     }
   ]
 }

@@ -3,15 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { DATA_CHANGED, emitDataChanged, postJson, type DataChangedDetail } from "@/lib/client-events";
+import { ChatPanel, askAssistant } from "@/components/chat/chat-panel";
+import type { ChatMessageView } from "@/lib/chat-types";
 import { formatUSD } from "@/lib/domain/money";
 import type { OverviewData, RangeKey, SeriesPoint, WorthALookView } from "@/lib/overview-types";
 import { BalanceCard } from "./balance-card";
 import { CashFlowCard } from "./cash-flow-card";
-import { ChatBox } from "./chat-box";
 import { OverviewHeader } from "./overview-header";
 import { RecentTransactions } from "./recent-transactions";
 import { SpendingCard } from "./spending-card";
-import { SuggestionChips } from "./suggestion-chips";
 import { WorthALook } from "./worth-a-look";
 
 async function fetchOverview(range: RangeKey): Promise<OverviewData> {
@@ -35,15 +35,13 @@ function questionFor(top: WorthALookView["top"]): string {
 }
 
 /** Overview page body. Initial data is server-rendered; later refreshes come from GET /api/overview. */
-export function OverviewView({ initial }: { initial: OverviewData }) {
+export function OverviewView({ initial, chat }: { initial: OverviewData; chat: ChatMessageView[] }) {
   const [data, setData] = useState(initial);
   const [range, setRange] = useState<RangeKey>(initial.series.range);
   const rangeRef = useRef(range);
   const [seriesState, setSeriesState] = useState<"ready" | "loading" | "error">("ready");
   const cache = useRef(new Map<RangeKey, SeriesPoint[]>([[initial.series.range, initial.series.points]]));
   const [points, setPoints] = useState(initial.series.points);
-  const [draft, setDraft] = useState("");
-  const chatInput = useRef<HTMLTextAreaElement>(null);
   const [worthBusy, setWorthBusy] = useState(false);
 
   const loadRange = useCallback(async (next: RangeKey) => {
@@ -92,8 +90,7 @@ export function OverviewView({ initial }: { initial: OverviewData }) {
   async function onWorthPrimary() {
     if (!worth) return;
     if (!proposal) {
-      setDraft(questionFor(worth.top));
-      chatInput.current?.focus();
+      askAssistant(questionFor(worth.top));
       return;
     }
     // Approval endpoint (atomic approve + execute) arrives in Phase 7.
@@ -119,10 +116,7 @@ export function OverviewView({ initial }: { initial: OverviewData }) {
     <div className="mx-auto flex max-w-[1240px] flex-col">
       <OverviewHeader dateLabel={data.dateLabel} name={data.userName} netCents={s.netCents} />
       <div className="mt-6 md:mt-[25px]">
-        <ChatBox draft={draft} onDraftChange={setDraft} inputRef={chatInput} />
-      </div>
-      <div className="mt-4">
-        <SuggestionChips onPick={(text) => setDraft(text)} />
+        <ChatPanel initialMessages={chat} />
       </div>
       {worth && (
         <div className="mt-6 md:mt-[27px]">

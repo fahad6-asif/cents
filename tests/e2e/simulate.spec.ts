@@ -68,9 +68,4 @@ test.describe("Simulate in the UI", () => {
     expect(errors).toEqual([]);
   });
 
-  test("Ask assistant prefills the chat with a question about the alert", async ({ page }) => {
-    await page.goto("/");
-    await page.getByTestId("worth-primary").click();
-    await expect(page.getByPlaceholder("Ask anything about your money")).toHaveValue(/Dining budget at 88%/);
-  });
 });

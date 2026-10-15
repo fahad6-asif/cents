@@ -13,7 +13,10 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "seed:summary": "tsx scripts/seed-summary.ts",
-    "verify:sessions": "tsx scripts/verify-sessions-live.mts"
+    "verify:sessions": "tsx scripts/verify-sessions-live.mts",
+    "scan:bundle": "tsx scripts/scan-bundle.mts",
+    "gate6": "tsx scripts/gate6-live.mts",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

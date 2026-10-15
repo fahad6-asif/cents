@@ -12,7 +12,10 @@ export type AuditEvent =
   | "action_rejected"
   | "action_executed"
   | "action_blocked"
-  | "demo_reset";
+  | "demo_reset"
+  | "chat_message"
+  | "chat_cleared"
+  | "chat_rate_limited";
 
 /** Appends one audit entry. The audit log is never updated or deleted by app code. */
 export async function audit(

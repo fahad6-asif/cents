@@ -151,7 +151,7 @@ export const auditLog = pgTable(
     details: jsonb("details").notNull().default({}),
     createdAt: createdAt(),
   },
-  (t) => [index("audit_log_session_idx").on(t.sessionId, t.createdAt)],
+  (t) => [index("audit_log_session_idx").on(t.sessionId, t.createdAt), index("audit_log_event_idx").on(t.event, t.createdAt)],
 );
 
 export const chatMessages = pgTable(
@@ -161,6 +161,8 @@ export const chatMessages = pgTable(
     sessionId: sessionRef(),
     role: text("role", { enum: ["user", "assistant"] }).notNull(),
     content: text("content").notNull(),
+    /** Proposal created during this assistant turn (renders an approval card in the thread). */
+    actionId: uuid("action_id"),
     createdAt: createdAt(),
   },
   (t) => [index("chat_messages_session_idx").on(t.sessionId, t.createdAt)],
