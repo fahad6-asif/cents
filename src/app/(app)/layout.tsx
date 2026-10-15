@@ -1,8 +1,10 @@
 import { MobileTopBar } from "@/components/shell/mobile-top-bar";
 import { Sidebar } from "@/components/shell/sidebar";
+import { currentSession } from "@/lib/session";
 import { demoUserName } from "@/lib/sim";
 
-export default function AppLayout({ children }: LayoutProps<"/">) {
+export default async function AppLayout({ children }: LayoutProps<"/">) {
+  await currentSession(); // seeds this visitor's simulated account on first visit
   const userName = demoUserName();
   return (
     <div className="min-h-screen bg-bg">

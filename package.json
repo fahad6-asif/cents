@@ -9,7 +9,11 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
-    "screens": "tsx tests/e2e/screenshot.ts"
+    "screens": "tsx tests/e2e/screenshot.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "seed:summary": "tsx scripts/seed-summary.ts",
+    "verify:sessions": "tsx scripts/verify-sessions-live.mts"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
