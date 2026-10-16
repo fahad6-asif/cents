@@ -23,7 +23,7 @@ export async function dismissAlert(db: Db, sessionId: string, epoch: number, ale
 
     const now = new Date();
     await tx.update(alerts).set({ status: "dismissed", updatedAt: now }).where(eq(alerts.id, alert.id));
-    await audit(tx, sessionId, epoch, "alert_dismissed", { alert_id: alert.id, type: alert.type, dedupe_key: alert.dedupeKey });
+    await audit(tx, sessionId, epoch, "alert_dismissed", { alert_id: alert.id, type: alert.type, title: alert.title, dedupe_key: alert.dedupeKey });
 
     let rejectedProposalId: string | null = null;
     if (alert.proposalId) {

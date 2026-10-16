@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import { auditLog } from "./schema";
 import type { DbOrTx } from "./types";
 
@@ -25,5 +26,6 @@ export async function audit(
   event: AuditEvent,
   details: Record<string, unknown> = {},
 ): Promise<void> {
-  await db.insert(auditLog).values({ sessionId, epoch, event, details });
+  // clock_timestamp(), not now(): entries written in one transaction keep their real order.
+  await db.insert(auditLog).values({ sessionId, epoch, event, details, createdAt: sql`clock_timestamp()` });
 }

@@ -149,7 +149,7 @@ export function OverviewView({ initial, chat }: { initial: OverviewData; chat: C
           />
         </div>
       )}
-      <div className="mt-6 grid gap-5 md:mt-[30px] md:grid-cols-[minmax(0,62fr)_minmax(0,38fr)]">
+      <div className="mt-6 grid grid-cols-1 gap-5 md:mt-[30px] md:grid-cols-[minmax(0,62fr)_minmax(0,38fr)]">
         <BalanceCard
           balanceCents={s.balanceCents}
           deltaCents={s.netCents}
@@ -168,7 +168,7 @@ export function OverviewView({ initial, chat }: { initial: OverviewData; chat: C
           netCents={s.netCents}
         />
       </div>
-      <div className="mt-5 grid gap-5 md:mt-[30px] md:grid-cols-[minmax(0,38.5fr)_minmax(0,61.5fr)]">
+      <div className="mt-5 grid grid-cols-1 gap-5 md:mt-[30px] md:grid-cols-[minmax(0,38.5fr)_minmax(0,61.5fr)]">
         <SpendingCard monthLabel={data.monthLabel} totalCents={data.spending.totalCents} rows={data.spending.rows} />
         <RecentTransactions rows={data.recent} />
       </div>

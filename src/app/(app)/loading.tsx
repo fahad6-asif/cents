@@ -23,11 +23,11 @@ export default function Loading() {
           <Skeleton key={w} className={`h-11 shrink-0 rounded-full ${w}`} />
         ))}
       </div>
-      <div className="mt-6 grid gap-5 md:mt-[30px] md:grid-cols-[minmax(0,62fr)_minmax(0,38fr)]">
+      <div className="mt-6 grid grid-cols-1 gap-5 md:mt-[30px] md:grid-cols-[minmax(0,62fr)_minmax(0,38fr)]">
         <CardSkeleton className="h-[291px]" lines={4} />
         <CardSkeleton className="h-[291px]" lines={4} />
       </div>
-      <div className="mt-5 grid gap-5 md:mt-[30px] md:grid-cols-[minmax(0,38.5fr)_minmax(0,61.5fr)]">
+      <div className="mt-5 grid grid-cols-1 gap-5 md:mt-[30px] md:grid-cols-[minmax(0,38.5fr)_minmax(0,61.5fr)]">
         <CardSkeleton className="h-[337px]" lines={6} />
         <CardSkeleton className="h-[337px]" lines={6} />
       </div>

@@ -91,6 +91,7 @@ export async function runChecksInTx(tx: DbOrTx, sessionId: string, epoch: number
       await audit(tx, sessionId, epoch, "alert_created", {
         alert_id: inserted[0].id,
         type: c.type,
+        title: c.title,
         dedupe_key: c.dedupeKey,
         facts: c.facts,
         proposal_id: proposalId,
@@ -103,7 +104,7 @@ export async function runChecksInTx(tx: DbOrTx, sessionId: string, epoch: number
     if (live.has(key)) continue;
     await tx.update(alerts).set({ status: "resolved", updatedAt: now }).where(eq(alerts.id, alert.id));
     result.resolved.push(key);
-    await audit(tx, sessionId, epoch, "alert_resolved", { alert_id: alert.id, type: alert.type, dedupe_key: key });
+    await audit(tx, sessionId, epoch, "alert_resolved", { alert_id: alert.id, type: alert.type, title: alert.title, dedupe_key: key });
   }
   return result;
 }
