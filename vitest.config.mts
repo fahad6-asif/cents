@@ -7,7 +7,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["tests/unit/**/*.test.ts", "tests/api/**/*.test.ts"],
+    include: ["tests/unit/**/*.test.ts", "tests/api/**/*.test.ts", "tests/security/**/*.test.ts"],
     testTimeout: 30_000,
     hookTimeout: 60_000,
     coverage: {

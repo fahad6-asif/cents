@@ -48,7 +48,7 @@ describe("sessions", () => {
     const id = randomUUID();
     await ensureSession(db, id, TODAY_FOR_TESTS);
     const again = await ensureSession(db, id, TODAY_FOR_TESTS);
-    expect(again.created).toBe(false);
+    expect(again?.created).toBe(false);
     expect((await sessionSnapshot(db, id)).transactions).toHaveLength(seed.transactions.length);
   });
 

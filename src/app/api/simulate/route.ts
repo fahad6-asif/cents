@@ -36,6 +36,10 @@ export async function POST(request: Request) {
     timeOfDay,
   });
 
+  if (result.limited) {
+    return jsonError(429, "This demo session has reached its limit of simulated transactions. Reset the demo to start over.");
+  }
+
   const [data, worth] = await Promise.all([loadSessionData(db, session.id), loadWorthALook(db, session.id)]);
   return NextResponse.json(
     {

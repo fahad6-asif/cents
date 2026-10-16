@@ -17,7 +17,9 @@
     "scan:bundle": "tsx scripts/scan-bundle.mts",
     "gate6": "tsx scripts/gate6-live.mts",
     "e2e": "playwright test",
-    "gate7": "tsx scripts/gate7-live.mts"
+    "gate7": "tsx scripts/gate7-live.mts",
+    "security:llm": "tsx scripts/security-llm.mts",
+    "test:security": "vitest run tests/security"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

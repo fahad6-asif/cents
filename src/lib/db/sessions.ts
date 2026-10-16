@@ -1,4 +1,4 @@
-import { and, eq, lt, notExists, sql } from "drizzle-orm";
+import { and, eq, gt, lt, notExists, sql } from "drizzle-orm";
 import { lockSession, runChecksInTx } from "@/lib/engine/checks";
 import { audit } from "./audit";
 import { auditLog, sessions } from "./schema";
@@ -11,12 +11,18 @@ const TOUCH_INTERVAL_MINUTES = 5;
 
 export type SessionInfo = { id: string; epoch: number; created: boolean };
 
+export type EnsureOptions = {
+  /** Refuse to create (and seed) more than this many sessions per hour across all visitors. */
+  maxNewPerHour?: number;
+};
+
 /**
  * Returns the session, creating it (and cloning the seed) on first sight. Safe under concurrent
  * first requests: only the request whose INSERT wins seeds the data; the others wait on the
- * unique key and then see the committed row.
+ * unique key and then see the committed row. Returns null when the hourly creation cap is hit
+ * (protects the free database tier from bots that never keep cookies).
  */
-export async function ensureSession(db: Db, sessionId: string, today: string): Promise<SessionInfo> {
+export async function ensureSession(db: Db, sessionId: string, today: string, opts: EnsureOptions = {}): Promise<SessionInfo | null> {
   const existing = await db
     .select({ epoch: sessions.epoch, lastSeenAt: sessions.lastSeenAt })
     .from(sessions)
@@ -24,6 +30,14 @@ export async function ensureSession(db: Db, sessionId: string, today: string): P
   if (existing.length) {
     await touch(db, sessionId, existing[0].lastSeenAt);
     return { id: sessionId, epoch: existing[0].epoch, created: false };
+  }
+
+  if (opts.maxNewPerHour !== undefined) {
+    const [recent] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(sessions)
+      .where(gt(sessions.createdAt, sql`now() - interval '1 hour'`));
+    if (recent.n >= opts.maxNewPerHour) return null;
   }
 
   const created = await db.transaction(async (tx) => {

@@ -19,5 +19,6 @@ export function isSessionId(value: string | undefined): value is string {
 export const currentSession = cache(async (): Promise<SessionInfo | null> => {
   const id = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!isSessionId(id)) return null;
-  return ensureSession(getDb(), id, simToday());
+  const cap = process.env.NEW_SESSIONS_PER_HOUR;
+  return ensureSession(getDb(), id, simToday(), { maxNewPerHour: cap && /^\d+$/.test(cap) ? Number(cap) : 300 });
 });

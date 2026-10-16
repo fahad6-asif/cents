@@ -1,14 +1,18 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { audit } from "@/lib/db/audit";
 import { accounts, bills, transactions } from "@/lib/db/schema";
 import type { Db } from "@/lib/db/types";
 import { SIM_EVENTS, type SimEventId } from "@/lib/sim-events";
 import { lockSession, runChecksInTx, type CheckResult } from "./checks";
 
+/** Per-session cap on simulated transactions (reset the demo to start over). */
+export const MAX_SIMULATED_PER_SESSION = 100;
+
 /** Which bill a simulated payment settles (plan Section 6: electricity marks the bill paid). */
 const PAYS_BILL: Partial<Record<SimEventId, string>> = { electricity: "Electricity" };
 
 export type SimulateResult = {
+  limited?: boolean;
   replayed: boolean;
   transaction: { id: string; merchant: string; category: string; amountCents: number; occurredAt: string };
   paidBillId: string | null;
@@ -31,6 +35,19 @@ export async function simulateEvent(
     await lockSession(tx, args.sessionId);
 
     const [account] = await tx.select({ id: accounts.id }).from(accounts).where(eq(accounts.sessionId, args.sessionId));
+    const [count] = await tx
+      .select({ n: sql<number>`count(*)::int` })
+      .from(transactions)
+      .where(and(eq(transactions.sessionId, args.sessionId), eq(transactions.source, "simulated")));
+    if (count.n >= MAX_SIMULATED_PER_SESSION) {
+      const [replay] = await tx
+        .select()
+        .from(transactions)
+        .where(and(eq(transactions.sessionId, args.sessionId), eq(transactions.idempotencyKey, args.idempotencyKey)));
+      if (!replay) {
+        return { limited: true, replayed: false, transaction: null as never, paidBillId: null, checks: null };
+      }
+    }
     const inserted = await tx
       .insert(transactions)
       .values({
