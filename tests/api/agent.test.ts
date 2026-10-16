@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { and, eq } from "drizzle-orm";
-import { FALLBACK_REPLY, MAX_TOOL_ITERATIONS, runAgentTurn } from "@/lib/agent/loop";
+import { FALLBACK_REPLY, MAX_TOOL_ITERATIONS, PROPOSAL_NUDGE, runAgentTurn } from "@/lib/agent/loop";
 import { checkChatRateLimit } from "@/lib/agent/rate-limit";
 import { TOOLS, executeTool, toolDefinitions, type ToolContext, type TurnState } from "@/lib/agent/tools";
 import type { LlmClient, LlmRequest, LlmResponse } from "@/lib/agent/types";
@@ -138,6 +138,17 @@ describe("propose_budget_adjustment", () => {
     expect(events).toContain("action_proposed");
   });
 
+  it("enforces target_savings_cents server-side and reports the exact gap", async () => {
+    const c = await ctx();
+    const change = (cents: number) => ({ category: "Dining", month: "2026-11", new_limit_cents: cents });
+    const short = await run(c, "propose_budget_adjustment", { changes: [change(17_500)], rationale: "Save on dining.", target_savings_cents: 15_000 });
+    expect(short.ok).toBe(false);
+    expect(out(short).errors[0]).toContain("Reduce limits by another $25.00");
+    expect(await db.select().from(agentActions).where(eq(agentActions.sessionId, c.sessionId))).toHaveLength(0);
+    const exact = await run(c, "propose_budget_adjustment", { changes: [change(15_000)], rationale: "Save on dining.", target_savings_cents: 15_000 });
+    expect(out(exact)).toMatchObject({ ok: true, total_change: { cents: -15_000 } });
+  });
+
   it.each([
     ["unknown category", { category: "Crypto", month: "2026-11", new_limit_cents: 100 }],
     ["month outside current/next", { category: "Dining", month: "2026-12", new_limit_cents: 100 }],
@@ -238,6 +249,48 @@ describe("agent loop", () => {
       .where(and(eq(chatMessages.sessionId, c.sessionId), eq(chatMessages.role, "assistant")));
     expect(msg.actionId).toBe(turn.proposal!.id);
     expect((await loadChat(db, c.sessionId))[1].proposal?.id).toBe(turn.proposal!.id);
+  });
+
+  it("nudges once when a reply lists limit changes without a proposal", async () => {
+    const c = await ctx();
+    const llm = fakeLlm([
+      { content: "I suggest Dining: $300.00 → $250.00.", toolCalls: [], usage: null },
+      {
+        content: null,
+        toolCalls: [call("propose_budget_adjustment", { changes: [{ category: "Dining", month: "2026-11", new_limit_cents: 25_000 }], rationale: "Lower dining next month." })],
+        usage: null,
+      },
+      { content: "Proposed: Dining −$50.00. Approve it in the app.", toolCalls: [], usage: null },
+    ]);
+    const turn = await runAgentTurn({ ...c, appName: "Cents" }, llm, "Plan next month");
+    expect(llm.requests[1].messages.at(-1)).toMatchObject({ role: "user", content: PROPOSAL_NUDGE });
+    expect(turn.proposal).toMatchObject({ status: "pending", totalDeltaCents: -5_000 });
+    expect(turn.reply.content).toBe("Proposed: Dining −$50.00. Approve it in the app.");
+    expect((await loadChat(db, c.sessionId)).map((m) => m.content)).not.toContain(PROPOSAL_NUDGE);
+  });
+
+  it("does not nudge comparisons that use 'from $X to $Y' or arrows outside budget requests", async () => {
+    const c = await ctx();
+    const llm = fakeLlm([{ content: "Shopping went from $527.02 to $213.46; Dining $534.40 → $586.49.", toolCalls: [], usage: null }]);
+    await runAgentTurn({ ...c, appName: "Cents" }, llm, "Compare my spending in September vs August.");
+    expect(llm.requests).toHaveLength(1);
+  });
+
+  it("keeps the original answer if the reminder produces no proposal", async () => {
+    const c = await ctx();
+    const llm = fakeLlm([
+      { content: "Plan: Dining $300.00 → $250.00.", toolCalls: [], usage: null },
+      { content: "I won't create a proposal.", toolCalls: [], usage: null },
+    ]);
+    const turn = await runAgentTurn({ ...c, appName: "Cents" }, llm, "Plan next month's budget");
+    expect(turn.reply.content).toBe("Plan: Dining $300.00 → $250.00.");
+  });
+
+  it("does not nudge plain answers", async () => {
+    const c = await ctx();
+    const llm = fakeLlm([{ content: "You spent $2,481.72.", toolCalls: [], usage: null }]);
+    await runAgentTurn({ ...c, appName: "Cents" }, llm, "spend?");
+    expect(llm.requests).toHaveLength(1);
   });
 
   it("falls back to a friendly reply when the model call fails", async () => {

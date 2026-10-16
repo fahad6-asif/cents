@@ -37,3 +37,17 @@ test("Ask assistant on the Worth a look card sends a question about the alert", 
   await expect(page.getByText(/Why is my Dining budget at 88%/)).toBeVisible();
   await expect(page.getByTestId("assistant-message").last()).toContainText("$265.00", { timeout: 45_000 });
 });
+
+test("Plan next month's budget → approval card in the thread → Reject changes nothing", async ({ page }) => {
+  await page.goto("/");
+  const before = JSON.stringify((await (await page.request.get("/api/budgets?month=2026-11")).json()).budgets);
+  await page.getByRole("button", { name: "Plan next month’s budget" }).click();
+  const card = page.getByTestId("approval-card");
+  await expect(card).toBeVisible({ timeout: 45_000 });
+  await expect(card).toHaveAttribute("data-status", "pending");
+  await expect(card).toContainText("Potential savings");
+  await page.screenshot({ path: "docs/evidence/screens/phase7-chat-proposal.png" });
+  await card.getByTestId("reject").click();
+  await expect(page.getByTestId("approval-card")).toHaveAttribute("data-status", "rejected");
+  expect(JSON.stringify((await (await page.request.get("/api/budgets?month=2026-11")).json()).budgets)).toBe(before);
+});

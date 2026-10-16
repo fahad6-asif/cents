@@ -1,0 +1,71 @@
+{
+  "run_at": "2026-10-16T03:40:11.714Z",
+  "results": [
+    {
+      "question": "Help me save $150 more next month",
+      "reply": "I've proposed a November budget that would free up $150.00 in potential savings. It's pending, so nothing changes until you approve it in the app:\n\n- Dining: $300.00 down to $200.00 (−$100.00)\n- Shopping: $250.00 down to $200.00 (−$50.00)\n\nDining is already at 88.3% of its October limit, so the $200.00 cap will be tight. Essential categories are unchanged. If you'd rather keep Dining higher, I can propose a different mix, such as trimming Entertainment or Health instead.",
+      "proposal": {
+        "id": "4afad606-90dc-49f9-ba37-6105c8bd7a39",
+        "status": "pending",
+        "origin": "assistant",
+        "rationale": "Freeing $150 for savings next month by trimming discretionary categories. Dining is at 88.3% of its October limit, and Shopping is at 38% with room to spare. Essential categories are left unchanged.",
+        "changes": [
+          {
+            "month": "2026-11",
+            "category": "Dining",
+            "new_limit_cents": 20000,
+            "old_limit_cents": 30000
+          },
+          {
+            "month": "2026-11",
+            "category": "Shopping",
+            "new_limit_cents": 20000,
+            "old_limit_cents": 25000
+          }
+        ],
+        "kind": "potential_savings",
+        "totalDeltaCents": -15000,
+        "createdAt": "2026-10-16T03:39:37.434Z",
+        "decidedAt": null,
+        "executedAt": null,
+        "result": null
+      }
+    },
+    {
+      "question": "Plan next month’s budget",
+      "reply": "I've proposed a November budget that would reduce planned spending by $205.00. It's pending, so nothing changes until you approve it in the app:\n\n- Dining: $300.00 down to $200.00 (−$100.00). October Dining is at 88.3% of its limit.\n- Shopping: $250.00 down to $175.00 (−$75.00). October Shopping is at 38% of its limit.\n- Entertainment: $150.00 down to $120.00 (−$30.00). October Entertainment is at 49% of its limit.\n\nEssential categories stay the same. These are potential savings, not money already saved.",
+      "proposal": {
+        "id": "6deafa3a-7f3a-41ed-b9f1-907a4cc841fe",
+        "status": "pending",
+        "origin": "assistant",
+        "rationale": "Trim discretionary categories with room. Dining is at 88.3% of its October limit, so it drops from $300.00 to $200.00. Shopping is at 38% of its October limit, so it drops from $250.00 to $175.00. Entertainment is at 49% of its limit, so it drops from $150.00 to $120.00. Essential categories are unchanged.",
+        "changes": [
+          {
+            "month": "2026-11",
+            "category": "Dining",
+            "new_limit_cents": 20000,
+            "old_limit_cents": 30000
+          },
+          {
+            "month": "2026-11",
+            "category": "Shopping",
+            "new_limit_cents": 17500,
+            "old_limit_cents": 25000
+          },
+          {
+            "month": "2026-11",
+            "category": "Entertainment",
+            "new_limit_cents": 12000,
+            "old_limit_cents": 15000
+          }
+        ],
+        "kind": "potential_savings",
+        "totalDeltaCents": -20500,
+        "createdAt": "2026-10-16T03:39:57.860Z",
+        "decidedAt": null,
+        "executedAt": null,
+        "result": null
+      }
+    }
+  ]
+}

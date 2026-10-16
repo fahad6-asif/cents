@@ -1,12 +1,12 @@
 {
-  "run_at": "2026-10-15T19:33:31.172Z",
-  "session": "bcb62b38-4e9c-4afe-b5e2-fb14b24f3bc7",
-  "cost_usd": 0.00233,
+  "run_at": "2026-10-16T03:39:11.011Z",
+  "session": "5fb9408f-90fa-4481-8ef4-112a72e0e8db",
+  "cost_usd": 0.0019509999999999998,
   "results": [
     {
       "question": "How much did I spend this month?",
       "status": 200,
-      "ms": 7635,
+      "ms": 9455,
       "pass": true,
       "expected": [
         "$2,481.72"
@@ -20,12 +20,12 @@
       "tools": [
         "get_account_summary"
       ],
-      "reply": "You've spent **$2,481.72** so far in October (month to date, through 2026-10-15). That excludes $3,000.00 in transfers to savings, which count as money out but not spending."
+      "reply": "So far this month (October 1 to today, October 15), you've spent **$2,481.72**. That excludes $3,000.00 in transfers to savings, which are money out but not spending."
     },
     {
       "question": "Which category consumed the most money?",
       "status": 200,
-      "ms": 5783,
+      "ms": 6362,
       "pass": true,
       "expected": [
         "Housing",
@@ -42,12 +42,12 @@
       "tools": [
         "get_spending_by_category"
       ],
-      "reply": "Housing consumed the most in October, at **$1,450.00** (58.4% of your $2,481.72 spending). Groceries came next at $312.36 (12.6%), followed by Dining at $265.00 (10.7%)."
+      "reply": "Housing consumed the most, at **$1,450.00**, which is 58.4% of your $2,481.72 spending this month. Groceries came next at $312.36 (12.6%), followed by Dining at $265.00 (10.7%)."
     },
     {
       "question": "What bills are due soon?",
       "status": 200,
-      "ms": 5966,
+      "ms": 7986,
       "pass": true,
       "expected": [
         "Internet",
@@ -67,12 +67,12 @@
       "tools": [
         "get_upcoming_bills"
       ],
-      "reply": "Four bills are due in the next 14 days, totaling **$210.99**:\n\n- Internet, $45.00, due 2026-10-20 (in 5 days)\n- Phone, $30.00, due 2026-10-22 (in 7 days)\n- Electricity, $120.00, due 2026-10-25 (in 10 days)\n- Streaming, $15.99, due 2026-10-28 (in 13 days)"
+      "reply": "You have four bills due in the next 14 days, totaling **$210.99**:\n\n- Internet, $45.00, due October 20 (5 days)\n- Phone, $30.00, due October 22 (7 days)\n- Electricity, $120.00, due October 25 (10 days)\n- Streaming, $15.99, due October 28 (13 days)"
     },
     {
       "question": "Can I afford a $900 purchase?",
       "status": 200,
-      "ms": 6503,
+      "ms": 8848,
       "pass": true,
       "expected": [
         "$3,261.26",
@@ -83,26 +83,25 @@
         "$900.00",
         "$5,842.13",
         "$3,261.26",
+        "$2,361.26",
+        "$1,660.99",
         "$45.00",
         "$30.00",
         "$120.00",
         "$15.99",
         "$1,450.00",
-        "$1,660.99",
-        "$919.88",
-        "$2,361.26",
-        "$4,942.13"
+        "$919.88"
       ],
       "ungrounded": [],
       "tools": [
         "check_affordability"
       ],
-      "reply": "Yes, a $900.00 purchase is affordable. Your balance is **$5,842.13**, but disposable funds are **$3,261.26** after reserving for the bills and remaining essential budgets.\n\nThe bills counted are Internet ($45.00, due 2026-10-20), Phone ($30.00, due 2026-10-22), Electricity ($120.00, due 2026-10-25), Streaming ($15.99, due 2026-10-28), and Rent ($1,450.00, due 2026-11-01), totaling **$1,660.99**. Essential budgets still reserved for this month come to $919.88.\n\nAfter the purchase, disposable funds would be **$2,361.26** and your balance **$4,942.13**. Your next income is expected on 2026-11-14."
+      "reply": "Yes, a $900.00 purchase is affordable. Your balance is $5,842.13, but disposable funds (after bills and essential budgets are reserved) are $3,261.26, and would be $2,361.26 after the purchase.\n\nThe bills counted before your next income date on November 14 total $1,660.99: Internet ($45.00, Oct 20), Phone ($30.00, Oct 22), Electricity ($120.00, Oct 25), Streaming ($15.99, Oct 28), and Rent ($1,450.00, Nov 1). Essential budgets still reserved total $919.88."
     },
     {
       "question": "Why am I over my dining budget?",
       "status": 200,
-      "ms": 8738,
+      "ms": 9069,
       "pass": true,
       "expected": [
         "$325.00",
@@ -111,25 +110,25 @@
       ],
       "missing": [],
       "figures_in_reply": [
+        "$25.00",
         "$325.00",
         "$300.00",
-        "$25.00",
         "$112.09",
-        "$60.00",
         "$97.48",
-        "$74.90"
+        "$74.90",
+        "$60.00"
       ],
       "ungrounded": [],
       "tools": [
         "get_budget_status",
         "get_transactions"
       ],
-      "reply": "You're over your Dining budget because you've spent **$325.00** against a **$300.00** limit, which is **$25.00** over (108.3% utilized).\n\nThe biggest contributors are Bella Napoli at $112.09 across 2 visits (including a $60.00 charge on 2026-10-15), Lunch spot at $97.48 across 4 purchases, and Sushi Bar at $74.90 across 2 visits.\n\nNote that I'm not able to say from this data why these meals were bought, only where the money went. Also, this budget status was pulled through 2026-10-15, so the month-end total may differ."
+      "reply": "You're $25.00 over your Dining budget: you've spent **$325.00** against a limit of **$300.00** (108.3%). The biggest contributors are Bella Napoli at $112.09 across 2 visits and Lunch spot at $97.48 across 4 visits, followed by Sushi Bar at $74.90 across 2 visits. The largest single charge was $60.00 at Bella Napoli today."
     },
     {
       "question": "Compare my spending in September vs August.",
       "status": 200,
-      "ms": 6305,
+      "ms": 6850,
       "pass": true,
       "expected": [
         "$3,603.39",
@@ -141,24 +140,26 @@
         "$3,603.39",
         "$205.37",
         "$313.56",
-        "$213.46",
         "$527.02",
+        "$213.46",
         "$75.33",
-        "$5.45",
+        "$217.52",
+        "$142.19",
         "$72.74",
+        "$80.61",
         "$153.35",
         "$52.09",
+        "$534.40",
         "$586.49",
         "$47.89",
-        "$653.84",
-        "$16.25",
-        "$99.67"
+        "$605.95",
+        "$653.84"
       ],
       "ungrounded": [],
       "tools": [
         "compare_monthly_spending"
       ],
-      "reply": "Total spending fell from **$3,808.76** in August to **$3,603.39** in September, a decrease of **$205.37** (−5.4%).\n\nThe biggest drop was in Shopping, down **$313.56** (−59.5%), to $213.46 from $527.02. Transport fell **$75.33** (−34.6%) and Utilities fell $5.45 (−1.9%).\n\nIncreases were in Entertainment, up **$72.74** (+90.2%) to $153.35, Dining up $52.09 (+9.7%) to $586.49, Groceries up $47.89 (+7.9%) to $653.84, and Health up $16.25 (+19.5%) to $99.67. Housing and Subscriptions were unchanged."
+      "reply": "Total spending fell from **$3,808.76** in August to **$3,603.39** in September, a decrease of **$205.37 (5.4%)**.\n\nBiggest changes:\n- Shopping fell **$313.56** (59.5%), from $527.02 to $213.46\n- Transport fell **$75.33** (34.6%), from $217.52 to $142.19\n- Entertainment rose **$72.74** (90.2%), from $80.61 to $153.35\n- Dining rose **$52.09** (9.7%), from $534.40 to $586.49\n- Groceries rose **$47.89** (7.9%), from $605.95 to $653.84\n\nHousing and Subscriptions were unchanged."
     }
   ]
 }

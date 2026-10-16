@@ -275,7 +275,7 @@ export const TOOLS = [
     name: "propose_budget_adjustment",
     kind: "proposal",
     description:
-      "Propose new budget limits for the current or next month. Creates a PENDING proposal the user must approve in the app; nothing changes until then. The server fills in the current limits and validates.",
+      "Propose new budget limits for the current or next month. Creates a PENDING proposal the user must approve in the app; nothing changes until then. The server fills in the current limits and validates. If the user named an amount to save, pass it as target_savings_cents: the server rejects proposals whose total reduction differs and tells you the exact gap.",
     schema: z
       .object({
         changes: z
@@ -283,6 +283,8 @@ export const TOOLS = [
           .min(1)
           .max(18),
         rationale: z.string().min(10).max(600),
+        /** When the user names an amount to save, the proposal's total reduction must equal it. */
+        target_savings_cents: z.number().int().min(1).max(10_000_000).optional(),
       })
       .strict(),
     async run(ctx, input, state) {
@@ -297,6 +299,20 @@ export const TOOLS = [
       }));
       const check = validateChanges(changes, { currentMonth: current, currentLimit: limitOf });
       if (!check.ok) return { ok: false, errors: check.errors, note: "No proposal was created." };
+      if (input.target_savings_cents !== undefined) {
+        const reduction = -changes.reduce((sum, c) => sum + (c.new_limit_cents - c.old_limit_cents), 0);
+        if (reduction !== input.target_savings_cents) {
+          const gap = input.target_savings_cents - reduction;
+          return {
+            ok: false,
+            errors: [
+              `These changes reduce limits by ${formatUSD(reduction)}, but the target is ${formatUSD(input.target_savings_cents)}. ` +
+                `${gap > 0 ? `Reduce limits by another ${formatUSD(gap)}` : `Reduce ${formatUSD(-gap)} less`} and call again.`,
+            ],
+            note: "No proposal was created.",
+          };
+        }
+      }
 
       const [row] = await ctx.db
         .insert(agentActions)

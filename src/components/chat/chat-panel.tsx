@@ -6,8 +6,9 @@ import { ArrowRight, Sparkle } from "lucide-react";
 import { toast } from "sonner";
 import { SuggestionChips } from "@/components/dashboard/suggestion-chips";
 import type { ChatMessageView, ChatTurnResponse } from "@/lib/chat-types";
+import { DATA_CHANGED } from "@/lib/client-events";
 import { cn } from "@/lib/utils";
-import { ApprovalCard } from "./approval-card";
+import { ProposalCard } from "./proposal-card";
 import { MessageContent } from "./message-content";
 
 /** Other components ask the assistant by dispatching this event with the question text. */
@@ -77,6 +78,16 @@ export function ChatPanel({ initialMessages, variant = "card" }: Props) {
     return () => window.removeEventListener(ASK_EVENT, onAsk);
   }, [send]);
 
+  // Proposals can be decided elsewhere (Worth a look, Budgets page): refresh card states.
+  useEffect(() => {
+    const refresh = async () => {
+      const res = await fetch("/api/chat", { cache: "no-store" });
+      if (res.ok) setMessages((await res.json()).messages);
+    };
+    window.addEventListener(DATA_CHANGED, refresh);
+    return () => window.removeEventListener(DATA_CHANGED, refresh);
+  }, []);
+
   async function clear() {
     const res = await fetch("/api/chat", { method: "DELETE" });
     if (res.ok) {
@@ -84,8 +95,6 @@ export function ChatPanel({ initialMessages, variant = "card" }: Props) {
       setNotice(null);
     } else toast.error("Couldn't clear the conversation");
   }
-
-  const pendingProposalToast = () => toast.info("Approving proposals is enabled in the next build step.");
 
   return (
     <div className={cn("flex flex-col", variant === "page" && "min-h-0 flex-1")}>
@@ -129,9 +138,7 @@ export function ChatPanel({ initialMessages, variant = "card" }: Props) {
                     <Sparkle className="mt-1 size-[14px] shrink-0 text-brand" strokeWidth={1.75} aria-hidden />
                     <div className="flex min-w-0 flex-1 flex-col gap-3 text-[15px] leading-[22px] text-text">
                       <MessageContent text={msg.content} />
-                      {msg.proposal && (
-                        <ApprovalCard proposal={msg.proposal} onApprove={pendingProposalToast} onReject={pendingProposalToast} />
-                      )}
+                      {msg.proposal && <ProposalCard key={`${msg.proposal.id}-${msg.proposal.status}`} proposal={msg.proposal} />}
                     </div>
                   </div>
                 ),

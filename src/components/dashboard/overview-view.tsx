@@ -6,6 +6,7 @@ import { DATA_CHANGED, emitDataChanged, postJson, type DataChangedDetail } from 
 import { ChatPanel, askAssistant } from "@/components/chat/chat-panel";
 import type { ChatMessageView } from "@/lib/chat-types";
 import { formatUSD } from "@/lib/domain/money";
+import { decideProposal } from "@/lib/proposal-actions";
 import type { OverviewData, RangeKey, SeriesPoint, WorthALookView } from "@/lib/overview-types";
 import { BalanceCard } from "./balance-card";
 import { CashFlowCard } from "./cash-flow-card";
@@ -43,6 +44,7 @@ export function OverviewView({ initial, chat }: { initial: OverviewData; chat: C
   const cache = useRef(new Map<RangeKey, SeriesPoint[]>([[initial.series.range, initial.series.points]]));
   const [points, setPoints] = useState(initial.series.points);
   const [worthBusy, setWorthBusy] = useState(false);
+  const [worthDone, setWorthDone] = useState<string | null>(null);
 
   const loadRange = useCallback(async (next: RangeKey) => {
     setRange(next);
@@ -93,8 +95,14 @@ export function OverviewView({ initial, chat }: { initial: OverviewData; chat: C
       askAssistant(questionFor(worth.top));
       return;
     }
-    // Approval endpoint (atomic approve + execute) arrives in Phase 7.
-    toast.info("Approving proposals is enabled in the next build step.");
+    setWorthBusy(true);
+    const updated = await decideProposal(proposal.id, "approve");
+    setWorthBusy(false);
+    if (updated?.status === "executed") {
+      // Brief success state before the refreshed alert takes the card's place (plan 9.3 item 4).
+      setWorthDone(`Done, ${proposal.to} budget is now ${formatUSD(proposal.newLimitCents)}.`);
+      setTimeout(() => setWorthDone(null), 2500);
+    }
   }
 
   async function onWorthDismiss() {
@@ -118,7 +126,18 @@ export function OverviewView({ initial, chat }: { initial: OverviewData; chat: C
       <div className="mt-6 md:mt-[25px]">
         <ChatPanel initialMessages={chat} />
       </div>
-      {worth && (
+      {worthDone && (
+        <div className="mt-6 md:mt-[27px]">
+          <section
+            role="status"
+            data-testid="worth-done"
+            className="card flex items-center px-6 py-[17px] text-[15px] font-medium text-brand md:min-h-[102px]"
+          >
+            {worthDone}
+          </section>
+        </div>
+      )}
+      {worth && !worthDone && (
         <div className="mt-6 md:mt-[27px]">
           <WorthALook
             body={proposal ? `${worth.top.body} Move ${formatUSD(proposal.amountCents)} from ${proposal.from} to cover it?` : worth.top.body}
