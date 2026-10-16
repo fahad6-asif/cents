@@ -19,7 +19,8 @@
     "e2e": "playwright test",
     "gate7": "tsx scripts/gate7-live.mts",
     "security:llm": "tsx scripts/security-llm.mts",
-    "test:security": "vitest run tests/security"
+    "test:security": "vitest run tests/security",
+    "eval": "tsx tests/eval/run.ts"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

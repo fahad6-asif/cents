@@ -4,7 +4,7 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "tests/e2e",
   testMatch: "**/*.spec.ts",
-  timeout: 60_000,
+  timeout: 120_000, // local runs cross a slow PK → Singapore DB link
   expect: { timeout: 15_000 },
   fullyParallel: false,
   reporter: [["list"]],
