@@ -163,6 +163,8 @@ export const chatMessages = pgTable(
     content: text("content").notNull(),
     /** Proposal created during this assistant turn (renders an approval card in the thread). */
     actionId: uuid("action_id"),
+    /** Grounding check of an assistant reply's $ and % figures (addendum A4). */
+    verification: jsonb("verification"),
     createdAt: createdAt(),
   },
   (t) => [index("chat_messages_session_idx").on(t.sessionId, t.createdAt)],

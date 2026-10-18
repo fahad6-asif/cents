@@ -2,6 +2,7 @@ import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import type { BudgetChange } from "@/lib/domain/proposals";
 import { classifyChanges } from "@/lib/domain/proposals";
 import type { ChatMessageView, ProposalView } from "@/lib/chat-types";
+import type { Verification } from "@/lib/agent/verify";
 import { agentActions, auditLog, chatMessages } from "./schema";
 import type { DbOrTx } from "./types";
 
@@ -56,6 +57,7 @@ export async function loadChat(db: DbOrTx, sessionId: string): Promise<ChatMessa
     content: r.content,
     createdAt: r.createdAt.toISOString(),
     proposal: r.actionId ? (proposals.get(r.actionId) ?? null) : null,
+    verification: (r.verification as Verification | null) ?? null,
   }));
 }
 

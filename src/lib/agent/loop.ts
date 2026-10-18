@@ -5,6 +5,7 @@ import type { ChatMessageView, ChatTurnResponse } from "@/lib/chat-types";
 import { systemPrompt } from "./prompt";
 import { executeTool, toolDefinitions, type ToolContext, type TurnState } from "./tools";
 import type { LlmClient, LlmMessage } from "./types";
+import { correctionMessage, toVerification, verifyReply, type Verification, type VerifyResult } from "./verify";
 
 export const HISTORY_MESSAGES = 20;
 export const MAX_TOOL_ITERATIONS = 6;
@@ -43,6 +44,11 @@ export async function runAgentTurn(
   let failed = false;
   let nudged = false;
   let beforeNudge: string | null = null;
+  let nudgePending = false;
+  let retried = false;
+  let firstAttempt: { text: string; check: VerifyResult } | null = null;
+  let verification: Verification | null = null;
+  const outputs = () => logs.map((l) => ({ tool: l.toolName, output: l.output }));
   const wantsChange = ASKS_FOR_BUDGET_CHANGE.test(message);
   try {
     for (let iteration = 0; iteration <= MAX_TOOL_ITERATIONS && reply === null; iteration++) {
@@ -65,12 +71,27 @@ export async function runAgentTurn(
         if (wantsChange && !state.proposal && !nudged && iteration < MAX_TOOL_ITERATIONS && LISTS_LIMIT_CHANGES.test(text)) {
           // The model described changes without proposing them: ask once for the tool call.
           nudged = true;
+          nudgePending = true;
           beforeNudge = text;
           messages.push({ role: "assistant", content: text }, { role: "user", content: PROPOSAL_NUDGE });
           continue;
         }
         // If the reminder didn't produce a proposal, keep the original answer rather than a reply to the reminder.
-        reply = (nudged && !state.proposal && beforeNudge) || text || "I couldn't produce an answer from the available data.";
+        let candidate = (nudgePending && !state.proposal && beforeNudge) || text || "I couldn't produce an answer from the available data.";
+        nudgePending = false;
+        let check = verifyReply(candidate, outputs(), message);
+        if (!check.all_matched && !retried && iteration < MAX_TOOL_ITERATIONS) {
+          // One correction turn (A4): name the ungrounded figures and ask for a grounded rewrite.
+          retried = true;
+          firstAttempt = { text: candidate, check };
+          messages.push({ role: "assistant", content: candidate }, { role: "user", content: correctionMessage(check) });
+          continue;
+        }
+        // Never silently drop a reply: keep whichever attempt has fewer ungrounded figures.
+        const unmatched = (r: VerifyResult) => r.total_count - r.verified_count;
+        if (firstAttempt && unmatched(firstAttempt.check) < unmatched(check)) ({ text: candidate, check } = firstAttempt);
+        reply = candidate;
+        verification = toVerification(check, retried);
         break;
       }
       messages.push({
@@ -89,7 +110,9 @@ export async function runAgentTurn(
     console.error("agent turn failed", (err as Error).message);
     failed = true;
     reply = FALLBACK_REPLY;
+    verification = null;
   }
+  if (!failed && !verification) verification = toVerification(verifyReply(reply!, outputs(), message), retried);
 
   const saved = await ctx.db.transaction(async (tx) => {
     const [user] = await tx.insert(chatMessages).values({ sessionId: ctx.sessionId, role: "user", content: message }).returning();
@@ -100,6 +123,7 @@ export async function runAgentTurn(
         role: "assistant",
         content: reply!,
         actionId: state.proposal?.id ?? null,
+        verification,
         createdAt: new Date(user.createdAt.getTime() + 1),
       })
       .returning();
@@ -119,6 +143,15 @@ export async function runAgentTurn(
       failed,
       proposal_id: state.proposal?.id ?? null,
     });
+    if (verification) {
+      // Counts only, never the reply text.
+      await audit(tx, ctx.sessionId, ctx.epoch, verification.all_matched ? "reply_verified" : "reply_unverified", {
+        message_id: assistant.id,
+        verified_count: verification.verified_count,
+        total_count: verification.total_count,
+        retried: verification.retried,
+      });
+    }
     return { user, assistant };
   });
 
@@ -128,6 +161,7 @@ export async function runAgentTurn(
     content: r.content,
     createdAt: r.createdAt.toISOString(),
     proposal: r.actionId && state.proposal?.id === r.actionId ? state.proposal : null,
+    verification: (r.verification as Verification | null) ?? null,
   });
   return { user: view(saved.user), reply: view(saved.assistant), proposal: state.proposal, failed };
 }

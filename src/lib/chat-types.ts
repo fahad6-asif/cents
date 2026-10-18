@@ -1,5 +1,6 @@
 // Chat + proposal shapes shared by server and client.
 import type { BudgetChange, ProposalKind } from "@/lib/domain/proposals";
+import type { Verification } from "@/lib/agent/verify";
 
 export type ProposalStatus = "pending" | "approved" | "rejected" | "executed" | "failed" | "stale";
 
@@ -23,6 +24,8 @@ export type ChatMessageView = {
   content: string;
   createdAt: string;
   proposal: ProposalView | null;
+  /** Grounding check of an assistant reply; null for user messages and failed turns. */
+  verification: Verification | null;
 };
 
 export type ChatTurnResponse = {

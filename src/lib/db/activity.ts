@@ -43,5 +43,26 @@ export async function exportEvidence(db: DbOrTx, sessionId: string) {
     tool_calls: calls,
     agent_actions: actions,
     alerts: alertRows,
+    verification: verificationStats(audit),
+  };
+}
+
+/** Reply grounding stats from the append-only audit log (survives chat clears and resets). */
+export function verificationStats(audit: { event: string; details: unknown }[]) {
+  const rows = audit
+    .filter((a) => a.event === "reply_verified" || a.event === "reply_unverified")
+    .map((a) => ({ ok: a.event === "reply_verified", ...(a.details as { verified_count: number; total_count: number; retried: boolean }) }));
+  const withFigures = rows.filter((r) => r.total_count > 0);
+  const figures = withFigures.reduce((s, r) => s + r.total_count, 0);
+  const matched = withFigures.reduce((s, r) => s + r.verified_count, 0);
+  return {
+    replies_checked: rows.length,
+    replies_with_figures: withFigures.length,
+    replies_verified: withFigures.filter((r) => r.ok).length,
+    replies_partial: rows.filter((r) => !r.ok).length,
+    replies_retried: rows.filter((r) => r.retried).length,
+    figures_checked: figures,
+    figures_matched: matched,
+    verified_rate: withFigures.length ? Math.round((withFigures.filter((r) => r.ok).length / withFigures.length) * 1000) / 10 : null,
   };
 }

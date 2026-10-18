@@ -16,7 +16,9 @@ export type AuditEvent =
   | "demo_reset"
   | "chat_message"
   | "chat_cleared"
-  | "chat_rate_limited";
+  | "chat_rate_limited"
+  | "reply_verified"
+  | "reply_unverified";
 
 /** Appends one audit entry. The audit log is never updated or deleted by app code. */
 export async function audit(

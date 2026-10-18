@@ -73,5 +73,6 @@ test("evidence export downloads this session's JSON", async ({ page }) => {
   expect(res.headers()["content-disposition"]).toMatch(/attachment; filename="cents-evidence-/);
   const body = await res.json();
   expect(body.audit_log.map((e: { event: string }) => e.event)).toContain("session_created");
-  expect(Object.keys(body)).toEqual(["exported_at", "note", "session", "audit_log", "tool_calls", "agent_actions", "alerts"]);
+  expect(Object.keys(body)).toEqual(["exported_at", "note", "session", "audit_log", "tool_calls", "agent_actions", "alerts", "verification"]);
+  expect(body.verification).toMatchObject({ replies_checked: 0, verified_rate: null });
 });

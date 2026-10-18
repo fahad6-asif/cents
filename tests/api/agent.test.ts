@@ -5,6 +5,7 @@ import { FALLBACK_REPLY, MAX_TOOL_ITERATIONS, PROPOSAL_NUDGE, runAgentTurn } fro
 import { checkChatRateLimit } from "@/lib/agent/rate-limit";
 import { TOOLS, executeTool, toolDefinitions, type ToolContext, type TurnState } from "@/lib/agent/tools";
 import type { LlmClient, LlmRequest, LlmResponse } from "@/lib/agent/types";
+import { exportEvidence } from "@/lib/db/activity";
 import { loadChat } from "@/lib/db/chat";
 import { agentActions, auditLog, budgets, chatMessages, toolCalls } from "@/lib/db/schema";
 import { ensureSession } from "@/lib/db/sessions";
@@ -316,24 +317,84 @@ describe("agent loop", () => {
     const c = await ctx();
     const llm = fakeLlm([{ content: "Shopping went from $527.02 to $213.46; Dining $534.40 → $586.49.", toolCalls: [], usage: null }]);
     await runAgentTurn({ ...c, appName: "Cents" }, llm, "Compare my spending in September vs August.");
-    expect(llm.requests).toHaveLength(1);
+    expect(llm.requests.flatMap((r) => r.messages).some((m) => m.content === PROPOSAL_NUDGE)).toBe(false);
   });
 
   it("keeps the original answer if the reminder produces no proposal", async () => {
     const c = await ctx();
     const llm = fakeLlm([
+      { content: null, toolCalls: [call("get_budget_status", { month: "2026-10" })], usage: null },
       { content: "Plan: Dining $300.00 → $250.00.", toolCalls: [], usage: null },
       { content: "I won't create a proposal.", toolCalls: [], usage: null },
     ]);
-    const turn = await runAgentTurn({ ...c, appName: "Cents" }, llm, "Plan next month's budget");
+    const turn = await runAgentTurn({ ...c, appName: "Cents" }, llm, "Plan next month's budget with Dining at $250");
     expect(turn.reply.content).toBe("Plan: Dining $300.00 → $250.00.");
+    expect(turn.reply.verification).toMatchObject({ status: "verified", total_count: 2, retried: false });
   });
 
   it("does not nudge plain answers", async () => {
     const c = await ctx();
     const llm = fakeLlm([{ content: "You spent $2,481.72.", toolCalls: [], usage: null }]);
     await runAgentTurn({ ...c, appName: "Cents" }, llm, "spend?");
-    expect(llm.requests).toHaveLength(1);
+    expect(llm.requests.flatMap((r) => r.messages).some((m) => m.content === PROPOSAL_NUDGE)).toBe(false);
+  });
+
+  it("verifies a grounded reply, stores the check and audits counts only", async () => {
+    const c = await ctx();
+    const llm = fakeLlm([
+      { content: null, toolCalls: [call("get_account_summary")], usage: null },
+      { content: "You spent $2,481.72 so far.", toolCalls: [], usage: null },
+    ]);
+    const turn = await runAgentTurn({ ...c, appName: "Cents" }, llm, "spend?");
+    expect(llm.requests).toHaveLength(2);
+    expect(turn.reply.verification).toMatchObject({ status: "verified", verified_count: 1, total_count: 1, retried: false });
+    expect(turn.reply.verification!.figures[0]).toMatchObject({ raw: "$2,481.72", matched: true, source_tool: "get_account_summary" });
+    expect((await loadChat(db, c.sessionId))[1].verification).toEqual(turn.reply.verification);
+    const [row] = await db.select().from(auditLog).where(and(eq(auditLog.sessionId, c.sessionId), eq(auditLog.event, "reply_verified")));
+    expect(row.details).toEqual({ message_id: turn.reply.id, verified_count: 1, total_count: 1, retried: false });
+    expect(JSON.stringify(row.details)).not.toContain("2,481");
+    expect((await exportEvidence(db, c.sessionId)).verification).toMatchObject({ replies_checked: 1, replies_with_figures: 1, replies_verified: 1, figures_checked: 1, figures_matched: 1, verified_rate: 100 });
+  });
+
+  it("retries once when a figure is ungrounded, and the grounded rewrite is verified", async () => {
+    const c = await ctx();
+    const llm = fakeLlm([
+      { content: null, toolCalls: [call("get_account_summary")], usage: null },
+      { content: "You spent about $2,500 so far.", toolCalls: [], usage: null },
+      { content: "You spent $2,481.72 so far.", toolCalls: [], usage: null },
+    ]);
+    const turn = await runAgentTurn({ ...c, appName: "Cents" }, llm, "spend?");
+    expect(llm.requests).toHaveLength(3);
+    expect(llm.requests[2].messages.at(-1)).toMatchObject({ role: "user", content: expect.stringContaining("do not appear in your tool results: $2,500") });
+    expect(turn.reply.content).toBe("You spent $2,481.72 so far.");
+    expect(turn.reply.verification).toMatchObject({ status: "verified", retried: true });
+    expect((await loadChat(db, c.sessionId)).map((m) => m.content).join(" ")).not.toContain("internal check");
+  });
+
+  it("returns a still-ungrounded reply marked partial (never dropped) and audits reply_unverified", async () => {
+    const c = await ctx();
+    const llm = fakeLlm([
+      { content: "You'll spend $3,600.00 on dining next year.", toolCalls: [], usage: null },
+      { content: "Roughly $3,600.00 next year.", toolCalls: [], usage: null },
+    ]);
+    const turn = await runAgentTurn({ ...c, appName: "Cents" }, llm, "Just estimate next year's dining");
+    expect(llm.requests).toHaveLength(2);
+    expect(turn.reply.content).toBe("Roughly $3,600.00 next year.");
+    expect(turn.reply.verification).toMatchObject({ status: "partial", verified_count: 0, total_count: 1, retried: true });
+    const rows = await db.select().from(auditLog).where(and(eq(auditLog.sessionId, c.sessionId), eq(auditLog.event, "reply_unverified")));
+    expect(rows).toHaveLength(1);
+  });
+
+  it("keeps the first attempt when the rewrite is worse", async () => {
+    const c = await ctx();
+    const llm = fakeLlm([
+      { content: null, toolCalls: [call("get_account_summary")], usage: null },
+      { content: "You spent $2,481.72, about $2,500.", toolCalls: [], usage: null },
+      { content: "About $2,500, maybe $2,600.", toolCalls: [], usage: null },
+    ]);
+    const turn = await runAgentTurn({ ...c, appName: "Cents" }, llm, "spend?");
+    expect(turn.reply.content).toBe("You spent $2,481.72, about $2,500.");
+    expect(turn.reply.verification).toMatchObject({ status: "partial", verified_count: 1, total_count: 2, retried: true });
   });
 
   it("falls back to a friendly reply when the model call fails", async () => {
