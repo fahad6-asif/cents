@@ -64,6 +64,37 @@ export function nextIncomeDate(today: string): string {
   return `${month}-${String(SALARY_DAY).padStart(2, "0")}`;
 }
 
+const WEEKDAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/** "Tue 20 Oct": the human form of a day, used in AI tool outputs and UI labels. */
+export function formatDateLabel(iso: string): string {
+  const d = parse(iso);
+  return `${WEEKDAYS_SHORT[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()].slice(0, 3)}`;
+}
+
+/** A day as both machine and human form: tool outputs carry this, replies use the label. */
+export function dateLabel(iso: string): { iso: string; label: string } {
+  return { iso: iso.slice(0, 10), label: formatDateLabel(iso) };
+}
+
+const two = (n: number) => String(n).padStart(2, "0");
+
+/**
+ * "2:35 PM UTC" for a real-clock timestamp. Built by hand (no Intl/toLocale*), so the server
+ * and every browser print exactly the same text: no hydration mismatch.
+ */
+export function formatTimeLabel(timestamp: string): string {
+  const d = new Date(timestamp);
+  const h = d.getUTCHours();
+  return `${h % 12 === 0 ? 12 : h % 12}:${two(d.getUTCMinutes())} ${h < 12 ? "AM" : "PM"} UTC`;
+}
+
+/** "18 Oct, 9:32 UTC" for real-clock log timestamps (labelled as such wherever shown). */
+export function formatLoggedAt(timestamp: string): string {
+  const d = new Date(timestamp);
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()].slice(0, 3)}, ${d.getUTCHours()}:${two(d.getUTCMinutes())} UTC`;
+}
+
 /** "Thursday, 15 October" */
 export function formatLongDate(iso: string): string {
   const d = parse(iso);

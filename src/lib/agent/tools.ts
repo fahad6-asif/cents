@@ -4,7 +4,7 @@
  * approve, execute, delete or SQL tool. Every input is zod-validated and every query is scoped to
  * the caller's session. User-originated strings (merchant names) are wrapped in a "data" field.
  */
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { audit } from "@/lib/db/audit";
 import { toProposalView } from "@/lib/db/chat";
@@ -14,7 +14,7 @@ import type { Db } from "@/lib/db/types";
 import { checkAffordability } from "@/lib/domain/affordability";
 import { budgetStatuses, categorySpend, categorySpendBetween } from "@/lib/domain/budgets";
 import { CATEGORIES } from "@/lib/domain/categories";
-import { addDays, addMonths, dayOf, daysBetween, monthOf, nextIncomeDate } from "@/lib/domain/dates";
+import { addDays, addMonths, dateLabel, dayOf, daysBetween, formatLoggedAt, monthName, monthOf, nextIncomeDate } from "@/lib/domain/dates";
 import { formatUSD } from "@/lib/domain/money";
 import { validateChanges, type BudgetChange } from "@/lib/domain/proposals";
 import { summarize } from "@/lib/domain/summary";
@@ -55,7 +55,7 @@ export const TOOLS = [
       const data = await loadSessionData(ctx.db, ctx.sessionId);
       const s = summarize(data.account.openingBalanceCents, data.txs, ctx.today);
       return {
-        today: ctx.today,
+        today: dateLabel(ctx.today),
         account: `${data.account.displayName} (simulated)`,
         balance: m(s.balanceCents),
         month: monthOf(ctx.today),
@@ -69,7 +69,7 @@ export const TOOLS = [
         },
         start_of_month_balance: m(s.startOfMonthBalanceCents),
         balance_change_pct: s.changePct,
-        next_income_date: nextIncomeDate(ctx.today),
+        next_income_date: dateLabel(nextIncomeDate(ctx.today)),
         note: "Spending excludes transfers to savings. Net = money in − money out.",
       };
     },
@@ -102,7 +102,7 @@ export const TOOLS = [
       }
       const income = rows.filter((t) => t.type === "income").reduce((s, t) => s + t.amountCents, 0);
       return {
-        filters: { month: input.month ?? null, category: input.category ?? null, through: ctx.today },
+        filters: { month: input.month ?? null, category: input.category ?? null, through: dateLabel(ctx.today) },
         matching_count: rows.length,
         matching_expenses_total: m(expenses),
         matching_income_total: m(income),
@@ -112,7 +112,7 @@ export const TOOLS = [
           .map(([merchant, v]) => ({ data: { merchant }, count: v.count, total: m(v.cents) })),
         returned_count: Math.min(rows.length, input.limit),
         transactions: rows.slice(0, input.limit).map((t) => ({
-          date: dayOf(t.occurredAt),
+          date: dateLabel(dayOf(t.occurredAt)),
           amount: m(t.amountCents),
           category: t.category,
           type: t.type,
@@ -148,7 +148,7 @@ export const TOOLS = [
       }
       const total = [...totals.values()].reduce((a, b) => a + b, 0);
       return {
-        period: { from, to, partial_month: input.month === monthOf(ctx.today) },
+        period: { from: dateLabel(from), to: dateLabel(to), partial_month: input.month === monthOf(ctx.today) },
         total_spending: m(total),
         categories: [...totals.entries()]
           .sort((a, b) => b[1] - a[1])
@@ -170,7 +170,7 @@ export const TOOLS = [
       const sum = (f: (r: (typeof rows)[number]) => number) => rows.reduce((a, r) => a + f(r), 0);
       return {
         month: input.month,
-        spending_counted_through: ctx.today,
+        spending_counted_through: dateLabel(ctx.today),
         budgets: rows.map((r) => ({
           category: r.category,
           limit: m(r.limitCents),
@@ -195,13 +195,13 @@ export const TOOLS = [
       const until = addDays(ctx.today, input.days);
       const rows = data.bills.filter((b) => b.status === "unpaid" && b.dueDate <= until);
       return {
-        as_of: ctx.today,
+        as_of: dateLabel(ctx.today),
         window_days: input.days,
         bills: rows.map((b) => ({
           name: b.name,
           amount: m(b.amountCents),
           category: b.category,
-          due_date: b.dueDate,
+          due_date: dateLabel(b.dueDate),
           days_until_due: daysBetween(ctx.today, b.dueDate),
         })),
         total: m(rows.reduce((s, b) => s + b.amountCents, 0)),
@@ -256,8 +256,8 @@ export const TOOLS = [
         purchase: m(r.amountCents),
         affordable: r.affordable,
         balance: m(r.balanceCents),
-        next_income_date: r.nextIncomeDate,
-        bills_counted: r.bills.map((b) => ({ name: b.name, amount: m(b.amountCents), due_date: b.dueDate })),
+        next_income_date: dateLabel(r.nextIncomeDate),
+        bills_counted: r.bills.map((b) => ({ name: b.name, amount: m(b.amountCents), due_date: dateLabel(b.dueDate) })),
         bills_total: m(r.billsTotalCents),
         essential_budget_reserved: r.essentials
           .filter((e) => e.reservedCents > 0)
@@ -267,6 +267,56 @@ export const TOOLS = [
         balance_after_purchase: m(r.balanceAfterCents),
         disposable_after_purchase: m(r.disposableAfterCents),
         assumptions: r.assumptions,
+      };
+    },
+  }),
+
+  tool({
+    name: "get_proposals",
+    kind: "read",
+    description:
+      "Budget-change proposals and their CURRENT status (pending, executed, rejected, stale, failed), newest first, with counts. Call this before saying anything about whether a proposal is waiting, applied or rejected.",
+    schema: z
+      .object({
+        status: z.enum(["pending", "executed", "rejected", "stale", "all"]).default("all"),
+        limit: z.number().int().min(1).max(20).default(10),
+      })
+      .strict(),
+    async run(ctx, input) {
+      const rows = await ctx.db
+        .select()
+        .from(agentActions)
+        .where(
+          input.status === "all"
+            ? eq(agentActions.sessionId, ctx.sessionId)
+            : and(eq(agentActions.sessionId, ctx.sessionId), eq(agentActions.status, input.status)),
+        )
+        .orderBy(desc(agentActions.createdAt));
+      const all = await ctx.db.select({ status: agentActions.status }).from(agentActions).where(eq(agentActions.sessionId, ctx.sessionId));
+      const count = (st: string) => all.filter((r) => r.status === st).length;
+      const when = (d: Date | null) => (d ? { iso: d.toISOString(), label: formatLoggedAt(d.toISOString()) } : null);
+      return {
+        counts: { pending: count("pending"), executed: count("executed"), rejected: count("rejected"), stale: count("stale"), failed: count("failed") },
+        returned_count: Math.min(rows.length, input.limit),
+        proposals: rows.slice(0, input.limit).map((r) => ({
+          id: r.id,
+          status: r.status,
+          origin: r.origin,
+          created_at: when(r.createdAt),
+          decided_at: when(r.decidedAt),
+          executed_at: when(r.executedAt),
+          // Written earlier by the model or the rules: data, never instructions.
+          rationale_data: { text: r.rationale },
+          changes: (r.changes as BudgetChange[]).map((c) => ({
+            month: c.month,
+            month_label: `${monthName(c.month)} ${c.month.slice(0, 4)}`,
+            category: c.category,
+            old_limit: m(c.old_limit_cents),
+            new_limit: m(c.new_limit_cents),
+            delta: m(c.new_limit_cents - c.old_limit_cents),
+          })),
+        })),
+        note: "Statuses are live from the database. Times are real clock (UTC).",
       };
     },
   }),

@@ -7,6 +7,8 @@ import { StatusPill } from "@/components/shell/status-pill";
 import { loadAuditLog } from "@/lib/db/activity";
 import { listAlerts, type AlertRow } from "@/lib/db/alerts-view";
 import { getDb } from "@/lib/db/client";
+import { factLabels } from "@/lib/alert-labels";
+import { formatLoggedAt } from "@/lib/domain/dates";
 import { formatUSD } from "@/lib/domain/money";
 import { currentSession } from "@/lib/session";
 import { cn } from "@/lib/utils";
@@ -46,14 +48,6 @@ const EVENT_TONE: Record<string, string> = {
   demo_reset: "bg-ink-bar",
 };
 
-/** Fact keys ending in _cents render as dollars. */
-function factChips(facts: Record<string, string | number>) {
-  const skip = new Set(["month", "lookback_days", "remaining_cents", "overage_cents"]);
-  return Object.entries(facts)
-    .filter(([k, v]) => !skip.has(k) && !(k.endsWith("_cents") && v === 0))
-    .map(([k, v]) => [k.replace(/_cents$/, "").replace(/_/g, " "), k.endsWith("_cents") ? formatUSD(Number(v)) : k === "percent" ? `${v}%` : String(v)] as const);
-}
-
 function describe(event: string, d: Record<string, unknown>): string {
   const money = (v: unknown) => (typeof v === "number" ? formatUSD(v) : "");
   switch (event) {
@@ -78,8 +72,6 @@ function describe(event: string, d: Record<string, unknown>): string {
   }
 }
 
-const time = (iso: string) =>
-  new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "UTC" });
 
 function AlertCard({ alert, actions }: { alert: AlertRow; actions?: boolean }) {
   const meta = ALERT_META[alert.type] ?? ALERT_META.budget_warning;
@@ -96,15 +88,15 @@ function AlertCard({ alert, actions }: { alert: AlertRow; actions?: boolean }) {
         </div>
         <p className="mt-1 text-[14px] leading-[20px] break-words text-text-secondary">{alert.body}</p>
         <div className="mt-2 flex flex-wrap gap-1.5">
-          {factChips(alert.facts).map(([k, v]) => (
-            <span key={k} className="tabular rounded-full border border-line px-2 py-0.5 text-[12px] text-text-muted">
-              {k}: <span className="text-text">{v}</span>
+          {factLabels(alert.type, alert.facts).map((label) => (
+            <span key={label} className="tabular rounded-full border border-line px-2 py-0.5 text-[12px] text-text">
+              {label}
             </span>
           ))}
         </div>
         <div className="mt-2 flex items-center gap-3 text-[12px] text-text-muted">
           <span>{meta.label}</span>
-          <span>{time(alert.updatedAt)} UTC</span>
+          <span title="Real clock (UTC), not the simulated date">Logged {formatLoggedAt(alert.updatedAt)}</span>
           {alert.proposalId && alert.status === "active" && (
             <Link href="/budgets" className="font-medium text-brand hover:underline">
               Review proposal
@@ -168,7 +160,7 @@ export default async function InsightsPage() {
                     <span className="font-medium text-text" data-event={e.event}>
                       {EVENT_LABEL[e.event] ?? e.event}
                     </span>
-                    <span className="tabular shrink-0 text-[12px] text-text-muted">{time(e.createdAt)}</span>
+                    <span className="tabular shrink-0 text-[12px] text-text-muted">{formatLoggedAt(e.createdAt)}</span>
                   </div>
                   {describe(e.event, e.details) && <p className="truncate text-text-muted">{describe(e.event, e.details)}</p>}
                   {e.event === "demo_reset" && <p className="text-[12px] text-text-muted">Epoch {e.epoch} starts</p>}

@@ -70,7 +70,8 @@ export function SimulateMenu({ className }: { className?: string }) {
             <DropdownMenuItem
               key={event.id}
               onSelect={() => simulate(event.id)}
-              className="flex justify-between gap-4 rounded-[8px] px-2.5 py-2 text-[14px]"
+              aria-label={`${event.label} ${formatUSD(event.amountCents, { plus: true })}`}
+              className="flex w-full cursor-pointer justify-between gap-4 rounded-[8px] px-2.5 py-2 text-[14px] focus-visible:ring-2 focus-visible:ring-ring"
             >
               <span>{event.label}</span>
               <span className={cn("tabular", event.amountCents > 0 ? "text-brand" : "text-text-muted")}>
@@ -81,7 +82,7 @@ export function SimulateMenu({ className }: { className?: string }) {
           <DropdownMenuSeparator className="bg-line" />
           <DropdownMenuItem
             onSelect={() => setConfirmReset(true)}
-            className="gap-2 rounded-[8px] px-2.5 py-2 text-[14px] text-danger focus:text-danger"
+            className="w-full cursor-pointer gap-2 rounded-[8px] px-2.5 py-2 text-[14px] text-danger focus:text-danger focus-visible:ring-2 focus-visible:ring-ring"
           >
             <RotateCcw className="size-4" strokeWidth={1.75} />
             Reset demo

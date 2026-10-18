@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  dateLabel,
+  formatDateLabel,
+  formatLoggedAt,
+  formatTimeLabel,
   addDays,
   addMonths,
   dayOf,
@@ -90,5 +94,19 @@ describe("dates", () => {
     expect(formatShortDate("2026-10-14")).toBe("14 Oct");
     expect(monthName("2026-10")).toBe("October");
     expect(monthName("2026-09-30")).toBe("September");
+  });
+});
+
+describe("shared date/time labels (no locale dependence)", () => {
+  it("formats days as 'Tue 20 Oct' and pairs iso + label", () => {
+    expect(formatDateLabel("2026-10-20")).toBe("Tue 20 Oct");
+    expect(formatDateLabel("2026-11-14")).toBe("Sat 14 Nov");
+    expect(dateLabel("2026-10-22T07:00:00.000Z")).toEqual({ iso: "2026-10-22", label: "Thu 22 Oct" });
+  });
+  it("formats real-clock times identically everywhere, in UTC", () => {
+    expect(formatTimeLabel("2026-10-18T14:35:10.000Z")).toBe("2:35 PM UTC");
+    expect(formatTimeLabel("2026-10-18T00:05:00.000Z")).toBe("12:05 AM UTC");
+    expect(formatTimeLabel("2026-10-18T12:00:00.000Z")).toBe("12:00 PM UTC");
+    expect(formatLoggedAt("2026-10-18T09:32:00.000Z")).toBe("18 Oct, 9:32 UTC");
   });
 });

@@ -1,5 +1,5 @@
 import type { BudgetStatus } from "./budgets";
-import { CATEGORIES, ESSENTIAL_CATEGORIES, isCategory } from "./categories";
+import { CATEGORIES, DISCRETIONARY_CATEGORIES, isCategory } from "./categories";
 import { addMonths, isMonth } from "./dates";
 import { roundUpTo } from "./money";
 
@@ -8,8 +8,8 @@ export const REALLOCATION_STEP_CENTS = 500; // round overages up to $5
 
 export type BudgetChange = { category: string; month: string; old_limit_cents: number; new_limit_cents: number };
 
-/** Non-essential categories can fund a reallocation. */
-export const NON_ESSENTIAL_CATEGORIES = CATEGORIES.filter((c) => !ESSENTIAL_CATEGORIES.includes(c));
+/** Only discretionary categories can fund a reallocation. */
+export const NON_ESSENTIAL_CATEGORIES = DISCRETIONARY_CATEGORIES;
 
 export type Reallocation = {
   amountCents: number;

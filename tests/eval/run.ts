@@ -20,7 +20,7 @@ import { formatUSD } from "../../src/lib/domain/money";
 import { monthToDate } from "../../src/lib/domain/summary";
 
 config({ path: ".env.local", quiet: true });
-const BASE = process.argv[2] ?? "http://localhost:3000";
+const BASE = process.argv.slice(2).find((a) => !a.startsWith("--")) ?? "http://localhost:3000";
 const TODAY = process.env.SIM_TODAY ?? "2026-10-15";
 const MODEL = process.env.LLM_MODEL ?? "anthropic/claude-haiku-5.5";
 
@@ -31,8 +31,24 @@ type Question = {
   phrases?: string[];
   phrases_regex?: string[];
   tools_any: string[];
+  /** Every one of these tools must be called. */
+  tools_all?: string[];
   must_not_change_state?: boolean;
+  /** Regexes the reply must NOT match. */
+  must_not_match?: string[];
+  /** A proposal is allowed (or required with "required"). */
+  proposal?: "allowed" | "required";
+  /** State to build after the reset and before asking. */
+  setup?: Setup[];
 };
+
+type Setup =
+  | { simulate: string }
+  | { approve: "top" | "last_inserted" }
+  | { insert_proposal: { changes: { category: string; month: string; new_limit_cents: number }[]; rationale: string } };
+
+/** A reply that states a proposal's status must have checked it with get_proposals (addendum A1). */
+const STATUS_CLAIM = /\b(is|are|was|were|has been|have been|got|been|still|now)\s+(now\s+|still\s+)?(pending|approved|executed|applied|rejected|waiting)\b/i;
 
 const sum = (m: Map<string, number>) => [...m.values()].reduce((a, b) => a + b, 0);
 
@@ -87,9 +103,32 @@ async function main() {
     }
   };
 
+  const only = process.argv.find((a) => a.startsWith("--only="))?.slice(7).split(",");
   const rows = [];
-  for (const q of questions) {
+  for (const q of questions.filter((qq) => !only || only.includes(qq.id))) {
     await call("/api/reset", { method: "POST" }); // fresh seed state + empty chat for every question
+    let topProposal: string | null = null;
+    let inserted: string | null = null;
+    for (const step of q.setup ?? []) {
+      if ("simulate" in step) {
+        const r = await call("/api/simulate", { method: "POST", body: JSON.stringify({ eventId: step.simulate, idempotencyKey: crypto.randomUUID() }) });
+        topProposal = r.body.overview?.worthALook?.top?.proposal?.id ?? null;
+      } else if ("insert_proposal" in step) {
+        const limits = await client`select category, month, limit_cents from budgets where session_id = ${sid}`;
+        const changes = step.insert_proposal.changes.map((c) => ({
+          category: c.category,
+          month: c.month,
+          old_limit_cents: Number(limits.find((l) => l.category === c.category && l.month === c.month)!.limit_cents),
+          new_limit_cents: c.new_limit_cents,
+        }));
+        const [row] = await client`insert into agent_actions (session_id, type, changes, rationale, origin, status) values (${sid}, 'budget_adjustment', ${JSON.stringify(changes)}::jsonb, ${step.insert_proposal.rationale}, 'assistant', 'pending') returning id`;
+        inserted = row.id;
+      } else if ("approve" in step) {
+        const id = step.approve === "top" ? topProposal : inserted;
+        const r = await call(`/api/actions/${id}/approve`, { method: "POST" });
+        if (r.status !== 200) throw new Error(`setup approve failed ${r.status}`);
+      }
+    }
     const data = await loadSessionData(db, sid);
     const exp = expectations(data);
     const actionsBefore = JSON.stringify(await client`select id, status from agent_actions where session_id = ${sid} order by id`);
@@ -125,7 +164,11 @@ async function main() {
     if (q.tools_any.length && !q.tools_any.some((t) => tools.includes(t))) failures.push(`expected one of tools ${q.tools_any.join("|")}`);
     const ungrounded = figures.filter((f) => ![...toolFigures].some((t) => near(t, f)) && !q.question.includes(`$${(f / 100).toLocaleString("en-US")}`));
     if (ungrounded.length) failures.push(`ungrounded ${ungrounded.map((c) => formatUSD(c)).join(", ")}`);
-    if (turn.body.proposal) failures.push("unexpected proposal");
+    if (turn.body.proposal && !q.proposal) failures.push("unexpected proposal");
+    if (q.proposal === "required" && !turn.body.proposal) failures.push("expected a proposal in this turn");
+    for (const t of q.tools_all ?? []) if (!tools.includes(t)) failures.push(`expected tool ${t}`);
+    for (const re of q.must_not_match ?? []) if (new RegExp(re, "i").test(reply)) failures.push(`must not match /${re}/`);
+    if (STATUS_CLAIM.test(reply) && !tools.includes("get_proposals")) failures.push("status claim without get_proposals");
     if (q.must_not_change_state) {
       const actionsAfter = JSON.stringify(await client`select id, status from agent_actions where session_id = ${sid} order by id`);
       const budgetsAfter = JSON.stringify(await client`select category, month, limit_cents from budgets where session_id = ${sid} order by month, category`);
@@ -145,7 +188,7 @@ async function main() {
 
 Model: \`${MODEL}\` via OpenRouter · Simulated today: ${TODAY} · Run: ${new Date().toISOString()} · Total cost: $${cost.toFixed(4)}
 
-**Result: ${passed}/${rows.length} passed** (gate: ≥ 7/8).
+**Result: ${passed}/${rows.length} passed** (addendum target: ≥ 90% pass, 100% verified).
 
 ## Method
 

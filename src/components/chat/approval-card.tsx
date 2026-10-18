@@ -3,7 +3,7 @@
 import { Check, Clock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ProposalView } from "@/lib/chat-types";
-import { monthName } from "@/lib/domain/dates";
+import { formatTimeLabel, monthName } from "@/lib/domain/dates";
 import { formatUSD } from "@/lib/domain/money";
 import { cn } from "@/lib/utils";
 
@@ -14,8 +14,8 @@ type Props = {
   onReject?: () => void;
 };
 
-const time = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "";
+// Shared formatter: identical on server and client (no locale), so no hydration mismatch.
+const time = (iso: string | null) => (iso ? formatTimeLabel(iso) : "");
 
 /** Plan 9.4: "Proposed budget change" with current → proposed per category and Approve / Reject. */
 export function ApprovalCard({ proposal, busy, onApprove, onReject }: Props) {

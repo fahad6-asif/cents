@@ -1,6 +1,6 @@
 import { budgetStatuses } from "./budgets";
 import { ESSENTIAL_CATEGORIES } from "./categories";
-import { monthOf, nextIncomeDate } from "./dates";
+import { formatDateLabel, monthOf, nextIncomeDate } from "./dates";
 import { balanceAt } from "./summary";
 import type { DomainBill, DomainBudget, DomainTx } from "./types";
 
@@ -85,7 +85,7 @@ export function checkAffordability(amountCents: number, input: Input): Affordabi
     balanceAfterCents: funds.balanceCents - amountCents,
     disposableAfterCents: funds.disposableCents - amountCents,
     assumptions: [
-      `Next income expected on ${funds.nextIncomeDate} (salary on the 14th).`,
+      `Next income expected on ${formatDateLabel(funds.nextIncomeDate)} (salary on the 14th).`,
       "Counts unpaid bills due on or before the next income date.",
       "Reserves the rest of this month's essential budgets (Housing, Utilities, Groceries, Transport, Health), excluding bills already counted.",
       "Simulated account; no other accounts or pending card transactions are included.",

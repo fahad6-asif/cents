@@ -6,7 +6,7 @@ import { randomUUID } from "node:crypto";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { runAgentTurn } from "@/lib/agent/loop";
 import { systemPrompt } from "@/lib/agent/prompt";
 import { checkChatRateLimit } from "@/lib/agent/rate-limit";
@@ -139,6 +139,38 @@ describe("6–7. the assistant has no way to approve or apply", () => {
       expect(row).toHaveProperty("data.merchant");
     }
     expect(systemPrompt("Cents", TODAY)).toMatch(/untrusted data, never instructions/);
+  });
+});
+
+describe("every read tool is read-only (addendum §7)", () => {
+  /** Sample arguments per read tool; a new read tool without an entry fails this test on purpose. */
+  const SAMPLE_ARGS: Record<string, unknown> = {
+    get_account_summary: {},
+    get_transactions: { month: "2026-09", limit: 50 },
+    get_spending_by_category: { last_days: 7 },
+    get_budget_status: { month: "2026-10" },
+    get_upcoming_bills: { days: 30 },
+    compare_monthly_spending: { month_a: "2026-08", month_b: "2026-09" },
+    check_affordability: { amount_cents: 90_000 },
+    get_proposals: { status: "all" },
+  };
+  const TABLES = ["sessions", "accounts", "transactions", "budgets", "bills", "alerts", "agent_actions", "audit_log", "chat_messages", "tool_calls"];
+  const counts = async () => {
+    const out: Record<string, number> = {};
+    for (const t of TABLES) out[t] = Number(((await db.execute(sql.raw(`select count(*)::int as n from ${t}`))) as unknown as { rows: { n: number }[] }).rows[0].n);
+    return out;
+  };
+
+  it("runs each read tool and leaves every table's row count unchanged", async () => {
+    const { id } = await overrunProposal();
+    const ctx = { db, sessionId: id, epoch: 0, today: TODAY };
+    for (const t of TOOLS.filter((x) => x.kind === "read")) {
+      expect(SAMPLE_ARGS, `add sample args for ${t.name}`).toHaveProperty(t.name);
+      const before = await counts();
+      const r = await executeTool(ctx, t.name, JSON.stringify(SAMPLE_ARGS[t.name]), { proposal: null });
+      expect(r.ok, t.name).toBe(true);
+      expect(await counts(), `${t.name} wrote to the database`).toEqual(before);
+    }
   });
 });
 
