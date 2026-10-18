@@ -1,5 +1,6 @@
 // Page/API view builders. Pure functions over one session's data; every figure from the domain layer.
 import { disposableFunds } from "@/lib/domain/affordability";
+import { analyzeBills } from "@/lib/domain/bills-analysis";
 import { budgetStatuses, type BudgetStatus } from "@/lib/domain/budgets";
 import { addMonths, dayOf, daysBetween, monthOf, nextIncomeDate } from "@/lib/domain/dates";
 import type { SessionData } from "@/lib/db/queries";
@@ -73,10 +74,21 @@ export function budgetsView(data: SessionData, today: string, which: "current" |
 // ---------------------------------------------------------------- bills
 
 export function billsView(data: SessionData, today: string) {
+  const analysis = new Map(analyzeBills(data.bills, today).bills.map((a) => [a.name, a]));
   const unpaid = data.bills
     .filter((b) => b.status === "unpaid")
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
-    .map((b) => ({ ...b, id: b.id!, daysUntilDue: daysBetween(today, b.dueDate) }));
+    .map((b) => {
+      const a = analysis.get(b.name);
+      // Only the next unpaid instance is compared (that is what analyzeBills compares).
+      const compared = a?.upcoming?.due === b.dueDate ? a : null;
+      return {
+        ...b,
+        id: b.id!,
+        daysUntilDue: daysBetween(today, b.dueDate),
+        usual: compared?.averageCents != null && compared.vsAverage ? { averageCents: compared.averageCents, pct: compared.vsAverage.pct, unusual: compared.unusual } : null,
+      };
+    });
   const paid = data.bills
     .filter((b) => b.status === "paid")
     .sort((a, b) => b.dueDate.localeCompare(a.dueDate))

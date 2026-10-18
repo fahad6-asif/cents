@@ -41,6 +41,7 @@ describe("tool registry", () => {
       "compare_monthly_spending",
       "check_affordability",
       "find_recurring_charges",
+      "analyze_bills",
       "get_proposals",
       "propose_budget_adjustment",
     ]);

@@ -7,6 +7,7 @@ import { formatShortDate } from "@/lib/domain/dates";
 import { formatUSD } from "@/lib/domain/money";
 import { currentSession } from "@/lib/session";
 import { simToday } from "@/lib/sim";
+import { cn } from "@/lib/utils";
 import { billsView } from "@/lib/views";
 
 export const metadata: Metadata = { title: "Bills" };
@@ -56,6 +57,12 @@ export default async function BillsPage() {
                       {formatShortDate(b.dueDate)}
                       <StatusPill tone={b.daysUntilDue < 0 ? "danger" : b.daysUntilDue <= 7 ? "warning" : "neutral"}>{dueLabel(b.daysUntilDue)}</StatusPill>
                     </div>
+                    {b.usual && (
+                      <div data-testid="bill-usual" className={cn("tabular mt-0.5 text-[12px]", b.usual.unusual ? "font-medium text-warning" : "text-text-muted")}>
+                        Avg {formatUSD(b.usual.averageCents)} ·{" "}
+                        {b.usual.pct === 0 ? "same as usual" : `${b.usual.pct > 0 ? "↑" : "↓"} ${Math.abs(b.usual.pct).toFixed(1)}% vs usual`}
+                      </div>
+                    )}
                   </div>
                   <div className="tabular text-right font-medium text-text">{formatUSD(b.amountCents)}</div>
                 </li>

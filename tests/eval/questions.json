@@ -211,6 +211,23 @@
       "tools_all": [
         "find_recurring_charges"
       ]
+    },
+    {
+      "id": "bill_normal",
+      "question": "Is my electricity bill normal?",
+      "expect": [
+        "elec_upcoming",
+        "elec_avg"
+      ],
+      "expect_pct": [
+        "elec_pct"
+      ],
+      "tools_any": [
+        "analyze_bills"
+      ],
+      "tools_all": [
+        "analyze_bills"
+      ]
     }
   ]
 }

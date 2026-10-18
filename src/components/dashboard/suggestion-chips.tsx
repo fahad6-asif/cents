@@ -4,6 +4,7 @@ export const SUGGESTIONS = [
   "Where did my money go this week?",
   "Can I afford a $900 purchase?",
   "Find my subscriptions",
+  "Analyze my bills",
   "Plan next month’s budget",
 ];
 

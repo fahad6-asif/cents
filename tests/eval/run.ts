@@ -15,6 +15,7 @@ import { loadSessionData, type SessionData } from "../../src/lib/db/queries";
 import type { Db } from "../../src/lib/db/types";
 import { checkAffordability } from "../../src/lib/domain/affordability";
 import { categorySpend } from "../../src/lib/domain/budgets";
+import { analyzeBills } from "../../src/lib/domain/bills-analysis";
 import { addDays } from "../../src/lib/domain/dates";
 import { formatUSD } from "../../src/lib/domain/money";
 import { findRecurringCharges } from "../../src/lib/domain/recurring";
@@ -29,6 +30,8 @@ type Question = {
   id: string;
   question: string;
   expect: string[];
+  /** Percent keys: the reply must state this % (1 dp, or rounded to a whole %). */
+  expect_pct?: string[];
   phrases?: string[];
   phrases_regex?: string[];
   tools_any: string[];
@@ -75,6 +78,7 @@ function expectations(d: SessionData): Record<string, number | string> {
     afford_900_disposable_after: a900.disposableAfterCents,
     sep_dining_total: categorySpend(d.txs, "2026-09").get("Dining") ?? 0,
     ...recurringExpectations(d),
+    ...billExpectations(d),
   };
 }
 
@@ -82,6 +86,17 @@ function recurringExpectations(d: SessionData): Record<string, number | string> 
   const r = findRecurringCharges(d.txs, d.bills, TODAY, 6);
   const subs = r.items.filter((i) => i.kind === "subscription");
   return { subs_monthly: r.totals.subscriptionsMonthlyCents, ...Object.fromEntries(subs.map((i, n) => [`sub_name_${n}`, i.merchant])) };
+}
+
+function billExpectations(d: SessionData): Record<string, number | string> {
+  const e = analyzeBills(d.bills, TODAY, 6, "Electricity").bills[0];
+  if (!e?.upcoming || e.averageCents === null || !e.vsAverage) return {};
+  return { elec_upcoming: e.upcoming.amountCents, elec_avg: e.averageCents, elec_pct: Math.abs(e.vsAverage.pct) };
+}
+
+/** Percentages in text ("6.9%", "7 %", "+6.9 percent") → numbers. */
+function percentFigures(text: string): number[] {
+  return [...text.matchAll(/(\d+(?:\.\d+)?)\s?(?:%|percent)/gi)].map((m) => Number(m[1]));
 }
 
 /** Dollar amounts in text → cents (handles $1,234.56, $1,234, −$5.00). */
@@ -159,6 +174,12 @@ async function main() {
       const cents = exp[key] as number;
       expected.push(`${key}=${formatUSD(cents)}`);
       if (!figures.some((f) => near(f, cents))) failures.push(`missing ${key} ${formatUSD(cents)}`);
+    }
+    const pcts = percentFigures(reply);
+    for (const key of q.expect_pct ?? []) {
+      const pct = exp[key] as number;
+      expected.push(`${key}=${pct}%`);
+      if (!pcts.some((p) => Math.abs(p - pct) < 0.05 || p === Math.round(pct))) failures.push(`missing ${key} ${pct}%`);
     }
     for (const key of q.phrases ?? []) {
       const phrase = String(exp[key] ?? key);
