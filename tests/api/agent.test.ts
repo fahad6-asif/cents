@@ -40,6 +40,7 @@ describe("tool registry", () => {
       "get_upcoming_bills",
       "compare_monthly_spending",
       "check_affordability",
+      "find_recurring_charges",
       "get_proposals",
       "propose_budget_adjustment",
     ]);
@@ -106,6 +107,19 @@ describe("read tools return the deterministic figures", () => {
     const afford = out(await run(c, "check_affordability", { amount_cents: 90_000 }));
     expect(afford).toMatchObject({ affordable: true, disposable_funds: { cents: 326_126 }, bills_total: { cents: 166_099 } });
     expect(afford.bills_counted.map((b: { name: string }) => b.name)).toEqual(["Internet", "Phone", "Electricity", "Streaming", "Rent"]);
+  });
+});
+
+describe("find_recurring_charges", () => {
+  it("returns the monthly subscription total, includes Gym (Health), and wraps merchants as data", async () => {
+    const r = out(await run(await ctx(), "find_recurring_charges", {}));
+    expect(r.totals).toMatchObject({ subscriptions_monthly: { cents: 6_397, usd: "$63.97" }, count_subscriptions: 4, count_bills: 5 });
+    expect(r.subscriptions.map((x: { data: { merchant: string } }) => x.data.merchant)).toEqual(["Gym membership", "Streaming plan", "News app", "Cloud storage"]);
+    expect(r.subscriptions_outside_subscriptions_category).toEqual([{ data: { merchant: "Gym membership" }, category: "Health" }]);
+    for (const row of [...r.subscriptions, ...r.bills]) {
+      expect(row).not.toHaveProperty("merchant");
+      expect(row.next_expected.label).toMatch(/^\w{3} \d+ \w{3}$/);
+    }
   });
 });
 

@@ -17,6 +17,7 @@ import { CATEGORIES } from "@/lib/domain/categories";
 import { addDays, addMonths, dateLabel, dayOf, daysBetween, formatLoggedAt, monthName, monthOf, nextIncomeDate } from "@/lib/domain/dates";
 import { formatUSD } from "@/lib/domain/money";
 import { validateChanges, type BudgetChange } from "@/lib/domain/proposals";
+import { findRecurringCharges } from "@/lib/domain/recurring";
 import { summarize } from "@/lib/domain/summary";
 import type { ProposalView } from "@/lib/chat-types";
 
@@ -267,6 +268,45 @@ export const TOOLS = [
         balance_after_purchase: m(r.balanceAfterCents),
         disposable_after_purchase: m(r.disposableAfterCents),
         assumptions: r.assumptions,
+      };
+    },
+  }),
+
+  tool({
+    name: "find_recurring_charges",
+    kind: "read",
+    description:
+      "Detects recurring charges (subscriptions and bills) across ALL categories from the last N months (default 6): cadence, typical amount, MONTHLY equivalent, last and next charge, and pre-computed monthly/yearly totals. Use for any question about subscriptions or recurring costs.",
+    schema: z.object({ lookback_months: z.number().int().min(3).max(12).default(6) }).strict(),
+    async run(ctx, input) {
+      const data = await loadSessionData(ctx.db, ctx.sessionId);
+      const r = findRecurringCharges(data.txs, data.bills, ctx.today, input.lookback_months);
+      const row = (i: (typeof r.items)[number]) => ({
+        data: { merchant: i.merchant },
+        category: i.category,
+        kind: i.kind,
+        cadence: i.cadence,
+        typical_amount: m(i.typicalCents),
+        monthly_equivalent: m(i.monthlyEquivalentCents),
+        occurrences: i.occurrences,
+        last_charged: dateLabel(i.lastCharged),
+        next_expected: dateLabel(i.nextExpected),
+        total_in_window: m(i.totalInWindowCents),
+      });
+      const subs = r.items.filter((i) => i.kind === "subscription");
+      return {
+        window: { from: dateLabel(r.from), to: dateLabel(r.to), months: input.lookback_months },
+        totals: {
+          subscriptions_monthly: m(r.totals.subscriptionsMonthlyCents),
+          subscriptions_yearly: m(r.totals.subscriptionsYearlyCents),
+          bills_monthly: m(r.totals.billsMonthlyCents),
+          count_subscriptions: r.totals.countSubscriptions,
+          count_bills: r.totals.countBills,
+        },
+        subscriptions: subs.map(row),
+        // Subscriptions a category filter would miss (e.g. a gym membership filed under Health).
+        subscriptions_outside_subscriptions_category: subs.filter((i) => i.category !== "Subscriptions").map((i) => ({ data: { merchant: i.merchant }, category: i.category })),
+        bills: r.items.filter((i) => i.kind === "bill").map(row),
       };
     },
   }),

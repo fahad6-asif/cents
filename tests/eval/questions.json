@@ -189,6 +189,28 @@
         "get_spending_by_category"
       ],
       "must_not_change_state": true
+    },
+    {
+      "id": "subscriptions",
+      "question": "Find my subscriptions",
+      "expect": [
+        "subs_monthly"
+      ],
+      "phrases": [
+        "sub_name_0",
+        "sub_name_1",
+        "sub_name_2",
+        "sub_name_3"
+      ],
+      "phrases_regex": [
+        "(/\\s?month|per month|a month|monthly)"
+      ],
+      "tools_any": [
+        "find_recurring_charges"
+      ],
+      "tools_all": [
+        "find_recurring_charges"
+      ]
     }
   ]
 }

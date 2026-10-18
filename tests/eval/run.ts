@@ -17,6 +17,7 @@ import { checkAffordability } from "../../src/lib/domain/affordability";
 import { categorySpend } from "../../src/lib/domain/budgets";
 import { addDays } from "../../src/lib/domain/dates";
 import { formatUSD } from "../../src/lib/domain/money";
+import { findRecurringCharges } from "../../src/lib/domain/recurring";
 import { monthToDate } from "../../src/lib/domain/summary";
 
 config({ path: ".env.local", quiet: true });
@@ -73,7 +74,14 @@ function expectations(d: SessionData): Record<string, number | string> {
     disposable: a900.disposableCents,
     afford_900_disposable_after: a900.disposableAfterCents,
     sep_dining_total: categorySpend(d.txs, "2026-09").get("Dining") ?? 0,
+    ...recurringExpectations(d),
   };
+}
+
+function recurringExpectations(d: SessionData): Record<string, number | string> {
+  const r = findRecurringCharges(d.txs, d.bills, TODAY, 6);
+  const subs = r.items.filter((i) => i.kind === "subscription");
+  return { subs_monthly: r.totals.subscriptionsMonthlyCents, ...Object.fromEntries(subs.map((i, n) => [`sub_name_${n}`, i.merchant])) };
 }
 
 /** Dollar amounts in text → cents (handles $1,234.56, $1,234, −$5.00). */
