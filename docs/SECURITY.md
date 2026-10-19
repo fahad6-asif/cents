@@ -141,7 +141,7 @@ Being honest about what this demo does **not** do:
 - **Rate limits are per session and global, not per IP.** Many new sessions could spread out the per-session limit. The global daily cap and the new-session cap bound the cost.
 - **No CAPTCHA or bot detection.**
 - **Custom merchant text is kept as typed** (apart from control characters and the 40-character limit). That is deliberate, so injection resistance can be shown. It means a reply can quote instruction-like text back to the user, as text. The renderer shows it as plain text, and the action surface stays limited to pending proposals.
-- **Reply format is LLM-dependent.** The readability check is deterministic, but the model's compliance varies from run to run. The last two full eval runs passed 17/17 and 15/17 (32/34, 94%), and the misses were a sentence with 3 figures or a paragraph with 4 sentences. Readability is logged only, never retried or blocked.
+- **Reply format is LLM-dependent.** The readability check is deterministic, but the model's compliance varies from run to run. The last three full eval runs passed 17/17, 15/17 and 17/17 (the last on production; 49/51, 96%), and the misses were a sentence with 3 figures or a paragraph with 4 sentences. Readability is logged only, never retried or blocked.
 - **The CSP has no `script-src`.** Next.js needs inline bootstrap scripts, which would require nonces. The CSP covers framing, base URI, form targets and plugins, and React escapes all rendered text, including merchant names and model replies.
 - **`*.vercel.app` may be slow or blocked in some regions.**
 - **The simulated account cannot move money.** The only write the product makes is budget limits, after approval.

@@ -1,6 +1,6 @@
 # Performance (addendum A8)
 
-Measured **locally** on 19 Oct 2026: a dev server (`next dev`) in Pakistan talking to Neon Postgres in Singapore (`ap-southeast-1`, about 100 ms per round trip) and to OpenRouter (`anthropic/claude-haiku-5.5`). The addendum asks for the final numbers on production. The app has not been redeployed yet, so these are local numbers. Production should be faster on the database side, because Vercel's function region can sit next to the database (see "Region" below).
+Production numbers are in the "Production" section below. The before/after tables were measured **locally** on 19 Oct 2026: a dev server (`next dev`) in Pakistan talking to Neon Postgres in Singapore (`ap-southeast-1`, about 100 ms per round trip) and to OpenRouter (`anthropic/claude-haiku-5.5`). The addendum asks for the final numbers on production. The app has not been redeployed yet, so these are local numbers. Production should be faster on the database side, because Vercel's function region can sit next to the database (see "Region" below).
 
 How to reproduce:
 
@@ -51,10 +51,22 @@ The biggest single win was "Plan next month's budget": **27.0 s → 11.4 s** (11
 
 **Where the rest of the time goes:** a typical turn is two model calls (one picks the tool, one writes the answer), at roughly 2.5–3 s each from here. Database time is now mostly hidden behind the first call. The remaining 6.4 s is almost entirely model time, so it can only come down further with streaming or a faster model. Neither is in scope.
 
+## Production (20 Oct 2026)
+
+Measured at https://cents-iota.vercel.app with the full eval set (`npm run eval -- https://cents-iota.vercel.app`): 17/17 passed, 16/16 verified, 17/17 readable, $0.0077 in total. The functions run in `sin1`, next to the database (confirmed by the `x-vercel-id: sin1::sin1` response header). The times below are wall-clock per `/api/chat` turn, measured from Pakistan.
+
+| Group | p50 | p95 / values | Target |
+|---|---:|---:|---|
+| Single-tool questions (12) | 3,127 | 3,623 | < 6 s: **met** |
+| Multi-tool questions (4) | n/a | 2,647 / 4,575 / 4,918 / 4,970 | < 10 s: **met** (plan next month 4.97 s) |
+| All questions | 3,127 | 4,970 | n/a |
+
+Compared with local, a single-tool turn is about 2× faster (6.4 s → 3.1 s), because the database is now a few milliseconds away instead of about 100 ms. That makes the snapshot prefetch nearly free. The production E2E suites also ran in 1.3 minutes, against about 9 minutes locally.
+
 ## Region
 
 - Database: Neon, Singapore (`ap-southeast-1`).
-- To do at deploy time: set the Vercel function region to Singapore (`sin1`), so the database is a few milliseconds away instead of about 100 ms. Then re-run the eval against production and add a column here. This hasn't been done, because nothing is deployed until the owner says so.
+- Functions: Vercel `sin1` (`vercel.json` `regions`).
 
 ## Correctness checks
 

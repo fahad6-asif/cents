@@ -6,7 +6,7 @@ Cents watches a demo checking account, explains where the money went, warns abou
 
 > **Simulated data.** Every account, transaction, bill and budget in Cents is synthetic, generated from a fixed seed. No real bank is connected, and nothing here is financial advice.
 
-**Live URL:** not deployed yet. The link will be added here after deployment.
+**Live URL:** https://cents-iota.vercel.app (Vercel, functions in Singapore `sin1`, next to the Neon database). Each visitor gets a private copy of the demo account.
 
 ## Features
 

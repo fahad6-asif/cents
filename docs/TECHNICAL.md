@@ -225,7 +225,7 @@ The **shape** of a reply changed; its substance did not.
 
 It runs on every eval reply (the Readability column in `docs/AI_EVAL.md`). In production it is logged only, as issue kinds in the `chat_message` audit entry, with no retry: the verifier owns the one retry, and correctness beats formatting.
 
-**Measured:** 5/17 eval replies passed before B2 (scored afterwards with the same checker). The last two full runs after B2 passed 17/17 and 15/17, so 32/34 (94%). Correctness stayed at 17/17 in both, with 16/16 replies verified.
+**Measured:** 5/17 eval replies passed before B2 (scored afterwards with the same checker). The last three full runs after B2 passed 17/17, 15/17 and 17/17 (the last one on production), so 49/51 (96%). Correctness stayed at 17/17 in all three, with 16/16 replies verified.
 
 ## 5. Core scenario data flow
 
