@@ -13,6 +13,10 @@ Cents watches a demo checking account, explains where the money went, warns abou
 **Dashboard (Overview)**
 - Balance, this month's cash flow (money in, money out, net), a balance chart (1W / 1M / 3M / 1Y), spending by category and recent transactions.
 - **Simulate transaction** adds a realistic event (restaurant, groceries, new subscription, electricity bill, salary, large purchase) so you can watch the alerts react.
+- **Custom transaction…** (same menu): pick Expense or Income, a category and an amount, plus an optional merchant name. A live preview shows what it does to that budget, for example "Dining: $265.00 → $325.00 of $300.00 (108%)", in amber at 80% and red over 100%. Adding it re-runs every check: alerts, the dashboard, and any pending proposal it makes out of date. Then the assistant posts a short **"Impact of new transaction"** note explaining what changed. A switch turns that note off.
+  - Limits: $0.01–$10,000.00, a merchant name of at most 40 characters, and up to 30 custom transactions per hour.
+  - Expenses use the 9 budget categories (not Savings), and income always goes to Income.
+  - Custom transactions can't be edited, deleted or back-dated.
 - **Worth a look** shows the most important alert. It either offers a one-click fix ("Move $25 to Dining"), or, when no single move can fix an overrun, a **"Let the agent fix it"** button.
 
 **Assistant** (the chatbox on Overview, or the full Assistant page)
@@ -24,6 +28,7 @@ Cents watches a demo checking account, explains where the money went, warns abou
 - **Proposals, not actions.** The assistant can only *propose* budget changes. Approval happens only through a button in the app.
 - **Verified figures:** under each answer, "✓ 6 figures checked against your account", or an amber warning if a figure couldn't be matched.
 - **"How I got this":** a collapsible line, for example "✦ 2 steps · ✓ 6 figures checked · 4.1s", lists every check the assistant ran and its key numbers.
+- **Readable replies:** every answer opens with the direct answer in bold. Lists use bullets and comparisons use small tables, with at most two figures per sentence. A deterministic readability check scores every reply.
 
 **Pages**
 - **Bills:** upcoming and paid bills, the total due before your next income, and "Avg $X · ↑ N% vs usual" for each upcoming bill.
@@ -100,7 +105,12 @@ npm run eval
 - `npm test`: unit, API and security tests on PGlite. No network needed.
 - `npm run e2e`: Playwright against a running dev server, at desktop (1360px) and mobile (375px). Tests that call the real model are skipped unless `RUN_LLM_E2E=1` is set.
 - `npm run eval`: the AI evaluation set (17 questions) against a running server. It writes `docs/AI_EVAL.md`. This costs a little LLM credit (about $0.01 per run).
-- Also available: `npm run security:llm` (live prompt-injection and jailbreak checks), `npm run scan:bundle` (no secrets in client bundles), and `npx tsx scripts/perf-tools.mts 5 --snapshot` (tool latency).
+- Also available:
+  - `npm run security:llm`: live prompt-injection and jailbreak checks, including an injection-shaped custom merchant name.
+  - `npm run scan:bundle`: no secrets in client bundles.
+  - `npx tsx scripts/perf-tools.mts 5 --snapshot`: tool latency.
+  - `npx tsx scripts/custom-txn-evidence.mts`: exports evidence for a custom transaction and its impact note.
+  - `npx tsx tests/e2e/readability-shots.ts after`: screenshots of the reply format.
 
 ## Deploy (Vercel + Neon)
 

@@ -42,13 +42,13 @@ flowchart LR
 |---|---|
 | `sessions` | One per visitor (anonymous cookie). `epoch` increments on reset. |
 | `accounts` | The simulated checking account (opening balance in cents). |
-| `transactions` | Income, expenses and transfers (`amount_cents` signed bigint, `category`, `merchant`, `source` seed/simulated, unique idempotency key per session). |
+| `transactions` | Income, expenses and transfers (`amount_cents` signed bigint, `category`, `merchant`, `source` seed/simulated, unique idempotency key per session). Also **`origin`** (B1): `preset` or `custom` for simulated rows. |
 | `budgets` | Limit per category per month (`YYYY-MM`). The seed has October and November. |
 | `bills` | Recurring bills with due date and paid/unpaid status. |
 | `alerts` | Rule alerts with `facts` (jsonb), a dedupe key, and status active/resolved/dismissed. |
 | `agent_actions` | Budget-change proposals: `changes` jsonb, `rationale`, `origin` assistant/alert, `status`, `result`. Also **`meta`** (A6): the server-computed overrun-fix split. |
 | `audit_log` | Append-only event log. No foreign key, so it survives resets. Uses `clock_timestamp()` ordering. |
-| `chat_messages` | The visible thread. Also **`verification`** (A4: the grounding check) and **`turn_ms`** (A5). |
+| `chat_messages` | The visible thread. Also **`verification`** (A4: the grounding check), **`turn_ms`** (A5) and **`kind`** (B1: `chat`, `impact`, or `impact_request`, the hidden fixed prompt of an impact note). |
 | `tool_calls` | Every tool call: input, output, ok, duration, `message_id`. Inserted with `clock_timestamp()` so the order survives. |
 
 - **Money:** always integer cents (`src/lib/domain/money.ts`). It's formatted to dollars only at the display edge.
@@ -192,6 +192,41 @@ flowchart LR
 - **Data flow:** the POST `/api/chat` response builds the trace from the turn's own log. GET `/api/chat` (`loadChat`) rebuilds it from `tool_calls` by `message_id`. The two produce the same trace in the same order (tested in `tests/api/trace.test.ts`).
 - **UI:** `src/components/chat/turn-receipts.tsx` shows "✦ N steps · ✓ N figures checked · 4.1s ▾", which expands to one row per tool.
 
+### Reply format and renderer (B2)
+
+The **shape** of a reply changed; its substance did not.
+- **Prompt:** the "Reply format" section in `prompt.ts` asks for:
+  - the answer first, in bold
+  - bullets for lists, a table for 3+ comparable rows (max 4 columns), and bold labels instead of `#` headings
+  - at most 2 figures per sentence and 3 sentences per paragraph
+  - limit changes always as a table
+  - label dates only
+  - at most one next step, no filler
+  - no re-listing of what a proposal card already shows
+
+  Its example shapes use `$X` placeholders, so no example figure can leak into a real answer.
+- **Bold lead:** `ensureBoldLead` (`src/lib/agent/readability.ts`) bolds the first sentence when the first line has no bold. It changes no words or figures.
+- **Renderer** (`src/components/chat/message-content.tsx`):
+  - GFM Markdown through `react-markdown` + `remark-gfm`. **Raw HTML is never rendered**: it is escaped, with no `rehype-raw` and no `dangerouslySetInnerHTML`.
+  - Links and images render as their text.
+  - Headings render as bold labels.
+  - Tables sit in their own `overflow-x: auto` wrapper, so a wide table scrolls inside the card and never moves the page.
+  - Amount cells are right-aligned in tabular digits.
+- **Verifier is format-proof:** `stripMarkdown` (`verify.ts`) removes bullets, bold, ticks and table pipes before extracting figures. So `**$2,361.26**`, table cells and `- $45.00` (which is not a negative amount) all match.
+
+### Readability check (B2.3)
+
+`checkReadability(markdown)` in `src/lib/agent/readability.ts` is deterministic. It flags:
+- a paragraph (not a list or table) with more than 3 sentences, or more than 4 figures
+- any sentence (bullets included, tables excluded) with more than 2 figures
+- a first line with no bold, or longer than 160 characters
+- an ISO date
+- more than 1,600 characters with no list or table
+
+It runs on every eval reply (the Readability column in `docs/AI_EVAL.md`). In production it is logged only, as issue kinds in the `chat_message` audit entry, with no retry: the verifier owns the one retry, and correctness beats formatting.
+
+**Measured:** 5/17 eval replies passed before B2 (scored afterwards with the same checker). The last two full runs after B2 passed 17/17 and 15/17, so 32/34 (94%). Correctness stayed at 17/17 in both, with 16/16 replies verified.
+
 ## 5. Core scenario data flow
 
 1. **Simulate** (`POST /api/simulate`, `src/lib/engine/simulate.ts`):
@@ -210,6 +245,68 @@ flowchart LR
 6. **Log:** every step writes to `audit_log`:
    - `transaction_simulated`, `alert_created`, `action_proposed`, `chat_message`, `reply_verified`, `action_approved`, `action_executed`, `alert_resolved`.
    - `/api/evidence` exports the session's audit log, tool calls, proposals, alerts and verification stats.
+
+### Custom transactions and the re-evaluation pipeline (B1)
+
+**Request.** `POST /api/simulate` takes one zod discriminated union (`src/lib/simulate-schema.ts`). Both variants reject unknown keys.
+
+| `kind` | Body |
+|---|---|
+| `preset` | `{eventId, idempotencyKey}`, unchanged. A body with `eventId` and no `kind` is treated as a preset. |
+| `custom` | `{type: "expense"\|"income", category?, amountCents, merchant?, idempotencyKey}` |
+
+Rules for `custom`:
+- **category:** one of the 9 budget categories. Required for an expense and rejected for income. Savings and Income can't be chosen.
+- **amountCents:** a positive integer from 1 to 1,000,000. The server applies the sign.
+- **merchant:** control characters are stripped and whitespace collapsed, then it must be at most 40 characters. The defaults are "Custom: {category}" and "Custom income".
+- The rules are shared by the API, the engine and the dialog (`src/lib/engine/simulate-rules.ts`).
+
+**Pipeline**, in the same request and the same transaction (`src/lib/engine/simulate.ts`):
+1. Lock the session and check the caps: 100 simulated transactions per session, and 30 custom per rolling hour (counted from the audit log; over the limit returns 429 and logs `simulate_rate_limited`).
+2. Insert the row with `origin`. Electricity auto-pay applies to the preset only.
+3. Audit `transaction_simulated`. For a custom row, only the merchant name's *length* is logged.
+4. `runChecksInTx`: every alert rule, with deduplication, resolution and the "Move $X" proposal.
+5. `recheckPendingProposals` (`src/lib/engine/proposal-recheck.ts`) checks every pending proposal against the new data. A proposal goes `stale` at once, logged as `action_stale` with a reason, when:
+   - the existing validator rejects it (`limits_changed` or `invalid`)
+   - it lowers a current-month limit below what is now already spent (`below_spent`)
+   - it is an overrun fix whose plan, recomputed on the new data, differs (`plan_changed`)
+
+The response adds `proposals: {stale: [...]}`, and the client refreshes every view through the same data-changed event the presets use.
+
+**AI impact note** (`POST /api/chat/impact`, `src/lib/agent/impact.ts`):
+- It covers one transaction ID, or up to 10. The client waits 3 s and sends one note for a whole burst.
+- **Fixed prompt:** built by the server, which the user can't change. It contains **no merchant text**: the model sees merchants only inside tool `data`.
+- **Server-computed facts** before the model runs. The server compares the session's rows with and without the new transactions:
+  - the category's spent → spent against its limit
+  - this month's net, before → after
+  - free to spend, before → after
+  - the rule-engine fix now waiting, and whether it covers the overage
+  - a count of proposals that went stale
+
+  This step is logged as `impact_facts`, so it appears as the first receipts row ("Re-checked the account after the new transaction") and grounds the verifier. The model explains the facts and never works out a delta.
+- **Turn:** at most 4 tool rounds, read tools only. `propose_budget_adjustment` refuses (`TurnState.blockProposals`) unless an active overrun has no rule-engine fix.
+- Counted as one chat message for the rate limit. Audited as `impact_note_requested` and `impact_note_completed` (with its tool count).
+- **UI:** shown with the chip "Impact of new transaction"; the hidden prompt is never shown. If the note fails, a muted line reads "AI impact note unavailable. Your dashboard is up to date."
+
+```mermaid
+sequenceDiagram
+  participant D as Custom transaction dialog
+  participant S as POST /api/simulate
+  participant DB as Postgres (one transaction)
+  participant I as POST /api/chat/impact
+  participant M as Model (read tools)
+  D->>S: {kind: custom, type, category, amountCents, merchant?}
+  S->>DB: insert (origin custom) + audit (merchant length only)
+  S->>DB: runChecks → alerts / "Move $X" proposal
+  S->>DB: recheckPendingProposals → stale + action_stale
+  S-->>D: transaction, alerts, proposals.stale, overview
+  D->>D: refresh every view, wait 3 s for more
+  D->>I: {transactionIds}
+  I->>DB: impact_facts (before → after, computed)
+  I->>M: fixed prompt + facts (no merchant text)
+  M-->>I: reply (verified, receipts)
+  I-->>D: "Impact of new transaction" note
+```
 
 ## 6. Approval workflow
 
