@@ -57,6 +57,8 @@ export const transactions = pgTable(
     type: text("type", { enum: ["income", "expense", "transfer"] }).notNull(),
     source: text("source", { enum: ["seed", "simulated"] }).notNull(),
     simEventId: text("sim_event_id"),
+    /** Simulated rows only: a preset event or a custom transaction (B1). Seed rows are null. */
+    origin: text("origin", { enum: ["preset", "custom"] }),
     idempotencyKey: text("idempotency_key"),
   },
   (t) => [
@@ -162,6 +164,8 @@ export const chatMessages = pgTable(
     id: id(),
     sessionId: sessionRef(),
     role: text("role", { enum: ["user", "assistant"] }).notNull(),
+    /** "impact_request" (hidden fixed prompt) and "impact" (the AI impact note) come from a custom transaction (B1.3). */
+    kind: text("kind", { enum: ["chat", "impact_request", "impact"] }).notNull().default("chat"),
     content: text("content").notNull(),
     /** Proposal created during this assistant turn (renders an approval card in the thread). */
     actionId: uuid("action_id"),

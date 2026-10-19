@@ -1,0 +1,628 @@
+{
+  "afford-900": {
+    "text": "Yes, a $900 purchase is affordable.\n\nYour balance is $5,842.13, but after unpaid bills due before your next income on Sat 14 Nov ($1,660.99 total, including Rent of $1,450.00 due Sun 1 Nov) and the rest of this month's essential budgets ($919.88), your disposable funds are $3,261.26. After the purchase, disposable funds would be $2,361.26 and your balance $4,942.13.",
+    "verification": {
+      "status": "verified",
+      "figures": [
+        {
+          "raw": "$900",
+          "kind": "usd",
+          "value": 90000,
+          "matched": true,
+          "source_tool": "check_affordability"
+        },
+        {
+          "raw": "$5,842.13",
+          "kind": "usd",
+          "value": 584213,
+          "matched": true,
+          "source_tool": "check_affordability"
+        },
+        {
+          "raw": "$1,660.99",
+          "kind": "usd",
+          "value": 166099,
+          "matched": true,
+          "source_tool": "check_affordability"
+        },
+        {
+          "raw": "$1,450.00",
+          "kind": "usd",
+          "value": 145000,
+          "matched": true,
+          "source_tool": "check_affordability"
+        },
+        {
+          "raw": "$919.88",
+          "kind": "usd",
+          "value": 91988,
+          "matched": true,
+          "source_tool": "check_affordability"
+        },
+        {
+          "raw": "$3,261.26",
+          "kind": "usd",
+          "value": 326126,
+          "matched": true,
+          "source_tool": "check_affordability"
+        },
+        {
+          "raw": "$2,361.26",
+          "kind": "usd",
+          "value": 236126,
+          "matched": true,
+          "source_tool": "check_affordability"
+        },
+        {
+          "raw": "$4,942.13",
+          "kind": "usd",
+          "value": 494213,
+          "matched": true,
+          "source_tool": "check_affordability"
+        }
+      ],
+      "retried": false,
+      "all_matched": true,
+      "total_count": 8,
+      "verified_count": 8
+    },
+    "overflow": {
+      "desktop": 0,
+      "mobile": 0
+    }
+  },
+  "subscriptions": {
+    "text": "You have **$63.97/month** across 4 subscriptions, or $767.64 a year.\n\n- Streaming plan: $15.99/month (Subscriptions)\n- News app: $9.99/month (Subscriptions)\n- Cloud storage: $2.99/month (Subscriptions)\n- **Gym membership: $35.00/month (Health, outside the Subscriptions category)**",
+    "verification": {
+      "status": "verified",
+      "figures": [
+        {
+          "raw": "$63.97",
+          "kind": "usd",
+          "value": 6397,
+          "matched": true,
+          "source_tool": "find_recurring_charges"
+        },
+        {
+          "raw": "$767.64",
+          "kind": "usd",
+          "value": 76764,
+          "matched": true,
+          "source_tool": "find_recurring_charges"
+        },
+        {
+          "raw": "$15.99",
+          "kind": "usd",
+          "value": 1599,
+          "matched": true,
+          "source_tool": "find_recurring_charges"
+        },
+        {
+          "raw": "$9.99",
+          "kind": "usd",
+          "value": 999,
+          "matched": true,
+          "source_tool": "find_recurring_charges"
+        },
+        {
+          "raw": "$2.99",
+          "kind": "usd",
+          "value": 299,
+          "matched": true,
+          "source_tool": "find_recurring_charges"
+        },
+        {
+          "raw": "$35.00",
+          "kind": "usd",
+          "value": 3500,
+          "matched": true,
+          "source_tool": "find_recurring_charges"
+        }
+      ],
+      "retried": false,
+      "all_matched": true,
+      "total_count": 6,
+      "verified_count": 6
+    },
+    "overflow": {
+      "desktop": 0,
+      "mobile": 0
+    }
+  },
+  "plan-next-month": {
+    "text": "I've proposed November limits that raise three categories, for a total increase of $190.00. Nothing changes until you approve it in the app.\n\n- **Groceries:** $600.00 → $620.00. You averaged $636.55 over July to September and were over budget in all three months.\n- **Dining:** $300.00 → $410.00. You averaged $517.26 and were over in all three months.\n- **Shopping:** $250.00 → $310.00. You averaged $363.59 and were over in two of the three months.\n\nHousing ($1,850.00), Utilities ($300.00), Transport ($250.00), Subscriptions ($40.00), Entertainment ($150.00) and Health ($150.00) stay as they are. Fixed bills and essentials are held, and Entertainment and Health are on track.",
+    "verification": {
+      "status": "verified",
+      "figures": [
+        {
+          "raw": "$190.00",
+          "kind": "usd",
+          "value": 19000,
+          "matched": true,
+          "source_tool": "get_category_history"
+        },
+        {
+          "raw": "$600.00",
+          "kind": "usd",
+          "value": 60000,
+          "matched": true,
+          "source_tool": "get_category_history"
+        },
+        {
+          "raw": "$620.00",
+          "kind": "usd",
+          "value": 62000,
+          "matched": true,
+          "source_tool": "get_category_history"
+        },
+        {
+          "raw": "$636.55",
+          "kind": "usd",
+          "value": 63655,
+          "matched": true,
+          "source_tool": "get_category_history"
+        },
+        {
+          "raw": "$300.00",
+          "kind": "usd",
+          "value": 30000,
+          "matched": true,
+          "source_tool": "get_category_history"
+        },
+        {
+          "raw": "$410.00",
+          "kind": "usd",
+          "value": 41000,
+          "matched": true,
+          "source_tool": "get_category_history"
+        },
+        {
+          "raw": "$517.26",
+          "kind": "usd",
+          "value": 51726,
+          "matched": true,
+          "source_tool": "get_category_history"
+        },
+        {
+          "raw": "$250.00",
+          "kind": "usd",
+          "value": 25000,
+          "matched": true,
+          "source_tool": "get_category_history"
+        },
+        {
+          "raw": "$310.00",
+          "kind": "usd",
+          "value": 31000,
+          "matched": true,
+          "source_tool": "get_category_history"
+        },
+        {
+          "raw": "$363.59",
+          "kind": "usd",
+          "value": 36359,
+          "matched": true,
+          "source_tool": "get_category_history"
+        },
+        {
+          "raw": "$1,850.00",
+          "kind": "usd",
+          "value": 185000,
+          "matched": true,
+          "source_tool": "get_category_history"
+        },
+        {
+          "raw": "$40.00",
+          "kind": "usd",
+          "value": 4000,
+          "matched": true,
+          "source_tool": "get_category_history"
+        },
+        {
+          "raw": "$150.00",
+          "kind": "usd",
+          "value": 15000,
+          "matched": true,
+          "source_tool": "get_category_history"
+        }
+      ],
+      "retried": false,
+      "all_matched": true,
+      "total_count": 13,
+      "verified_count": 13
+    },
+    "overflow": {
+      "desktop": 0,
+      "mobile": 0
+    }
+  },
+  "compare-sep-aug": {
+    "text": "Your total spending fell from $3,808.76 in August to $3,603.39 in September, a drop of $205.37 (5.4%).\n\n**Biggest decreases:**\n- Shopping: $527.02 to $213.46 (−$313.56, −59.5%)\n- Transport: $217.52 to $142.19 (−$75.33, −34.6%)\n- Utilities: $280.87 to $275.42 (−$5.45, −1.9%)\n\n**Biggest increases:**\n- Entertainment: $80.61 to $153.35 (+$72.74, +90.2%)\n- Health: $83.42 to $99.67 (+$16.25, +19.5%)\n- Groceries: $605.95 to $653.84 (+$47.89, +7.9%)\n- Dining: $534.40 to $586.49 (+$52.09, +9.7%)\n\nHousing ($1,450.00) and Subscriptions ($28.97) were unchanged.",
+    "verification": {
+      "status": "verified",
+      "figures": [
+        {
+          "raw": "$3,808.76",
+          "kind": "usd",
+          "value": 380876,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$3,603.39",
+          "kind": "usd",
+          "value": 360339,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$205.37",
+          "kind": "usd",
+          "value": 20537,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$527.02",
+          "kind": "usd",
+          "value": 52702,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$213.46",
+          "kind": "usd",
+          "value": 21346,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "−$313.56",
+          "kind": "usd",
+          "value": -31356,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$217.52",
+          "kind": "usd",
+          "value": 21752,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$142.19",
+          "kind": "usd",
+          "value": 14219,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "−$75.33",
+          "kind": "usd",
+          "value": -7533,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$280.87",
+          "kind": "usd",
+          "value": 28087,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$275.42",
+          "kind": "usd",
+          "value": 27542,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "−$5.45",
+          "kind": "usd",
+          "value": -545,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$80.61",
+          "kind": "usd",
+          "value": 8061,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$153.35",
+          "kind": "usd",
+          "value": 15335,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$72.74",
+          "kind": "usd",
+          "value": 7274,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$83.42",
+          "kind": "usd",
+          "value": 8342,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$99.67",
+          "kind": "usd",
+          "value": 9967,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$16.25",
+          "kind": "usd",
+          "value": 1625,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$605.95",
+          "kind": "usd",
+          "value": 60595,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$653.84",
+          "kind": "usd",
+          "value": 65384,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$47.89",
+          "kind": "usd",
+          "value": 4789,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$534.40",
+          "kind": "usd",
+          "value": 53440,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$586.49",
+          "kind": "usd",
+          "value": 58649,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$52.09",
+          "kind": "usd",
+          "value": 5209,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$1,450.00",
+          "kind": "usd",
+          "value": 145000,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$28.97",
+          "kind": "usd",
+          "value": 2897,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "5.4%",
+          "kind": "pct",
+          "value": 5.4,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "−59.5%",
+          "kind": "pct",
+          "value": -59.5,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "−34.6%",
+          "kind": "pct",
+          "value": -34.6,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "−1.9%",
+          "kind": "pct",
+          "value": -1.9,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "+90.2%",
+          "kind": "pct",
+          "value": 90.2,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "+19.5%",
+          "kind": "pct",
+          "value": 19.5,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "+7.9%",
+          "kind": "pct",
+          "value": 7.9,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "+9.7%",
+          "kind": "pct",
+          "value": 9.7,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        }
+      ],
+      "retried": false,
+      "all_matched": true,
+      "total_count": 34,
+      "verified_count": 34
+    },
+    "overflow": {
+      "desktop": 0,
+      "mobile": 0
+    }
+  },
+  "impact-note": {
+    "text": "Here's the re-evaluation after the **$120.00 Concert tickets** charge (Entertainment, Thu 15 Oct):\n\n- **Entertainment budget:** Spending is now **$193.50** against a **$150.00** limit, so it's over by **$43.50** (129% used, overrun). Before this charge it was $73.50 spent.\n- **This month's net:** Money in is $6,400.00 and money out is $5,601.72, for a net of **$798.28**.\n- **Affordability:** Balance is **$5,722.13** and disposable funds are **$3,141.26**. After this purchase, disposable funds would be $3,021.26, counting the $1,660.99 in bills due before Sat 14 Nov (including Rent on Sun 1 Nov).\n- **Alerts:** Entertainment is in overrun. Dining is at a warning level (88.3% used, $35.00 left).\n- **Proposals:** One proposal is pending, created 19 Oct: move $45.00 from Shopping to Entertainment, which would raise Entertainment to $195.00. It was generated before this charge, so it may not cover the full $43.50 overage or the new $120.00 spend. You can approve, reject, or ask me to re-plan the fix.",
+    "verification": {
+      "status": "verified",
+      "figures": [
+        {
+          "raw": "$120.00",
+          "kind": "usd",
+          "value": 12000,
+          "matched": true,
+          "source_tool": "get_transactions"
+        },
+        {
+          "raw": "$193.50",
+          "kind": "usd",
+          "value": 19350,
+          "matched": true,
+          "source_tool": "get_budget_status"
+        },
+        {
+          "raw": "$150.00",
+          "kind": "usd",
+          "value": 15000,
+          "matched": true,
+          "source_tool": "get_budget_status"
+        },
+        {
+          "raw": "$43.50",
+          "kind": "usd",
+          "value": 4350,
+          "matched": true,
+          "source_tool": "get_budget_status"
+        },
+        {
+          "raw": "$73.50",
+          "kind": "usd",
+          "value": 7350,
+          "matched": true,
+          "source_tool": "get_transactions"
+        },
+        {
+          "raw": "$6,400.00",
+          "kind": "usd",
+          "value": 640000,
+          "matched": true,
+          "source_tool": "get_account_summary"
+        },
+        {
+          "raw": "$5,601.72",
+          "kind": "usd",
+          "value": 560172,
+          "matched": true,
+          "source_tool": "get_account_summary"
+        },
+        {
+          "raw": "$798.28",
+          "kind": "usd",
+          "value": 79828,
+          "matched": true,
+          "source_tool": "get_account_summary"
+        },
+        {
+          "raw": "$5,722.13",
+          "kind": "usd",
+          "value": 572213,
+          "matched": true,
+          "source_tool": "get_account_summary"
+        },
+        {
+          "raw": "$3,141.26",
+          "kind": "usd",
+          "value": 314126,
+          "matched": true,
+          "source_tool": "check_affordability"
+        },
+        {
+          "raw": "$3,021.26",
+          "kind": "usd",
+          "value": 302126,
+          "matched": true,
+          "source_tool": "check_affordability"
+        },
+        {
+          "raw": "$1,660.99",
+          "kind": "usd",
+          "value": 166099,
+          "matched": true,
+          "source_tool": "check_affordability"
+        },
+        {
+          "raw": "$35.00",
+          "kind": "usd",
+          "value": 3500,
+          "matched": true,
+          "source_tool": "get_budget_status"
+        },
+        {
+          "raw": "$45.00",
+          "kind": "usd",
+          "value": 4500,
+          "matched": true,
+          "source_tool": "get_proposals"
+        },
+        {
+          "raw": "$195.00",
+          "kind": "usd",
+          "value": 19500,
+          "matched": true,
+          "source_tool": "get_proposals"
+        },
+        {
+          "raw": "129%",
+          "kind": "pct",
+          "value": 129,
+          "matched": true,
+          "source_tool": "get_budget_status"
+        },
+        {
+          "raw": "88.3%",
+          "kind": "pct",
+          "value": 88.3,
+          "matched": true,
+          "source_tool": "get_budget_status"
+        }
+      ],
+      "retried": false,
+      "all_matched": true,
+      "total_count": 17,
+      "verified_count": 17
+    },
+    "overflow": {
+      "desktop": 0,
+      "mobile": 0
+    }
+  }
+}

@@ -12,6 +12,7 @@ import { correctionMessage, toVerification, verifyReply, type Verification, type
 
 export const HISTORY_MESSAGES = 20;
 export const MAX_TOOL_ITERATIONS = 6;
+const MAX_ITERATIONS_DEFAULT = MAX_TOOL_ITERATIONS;
 export const FALLBACK_REPLY = "Sorry, the assistant is unavailable right now. Please try again in a moment.";
 /** Internal reminder (never stored) when a reply lists limit changes but no proposal exists. */
 export const PROPOSAL_NUDGE =
@@ -26,11 +27,23 @@ type ToolLog = { toolName: string; input: unknown; output: unknown; ok: boolean;
  * server-side and feed results back, up to 6 tool iterations, then force a text answer.
  * Every tool call is logged. The user message and the reply are stored together at the end.
  */
+export type TurnOptions = {
+  /** Tool rounds before a text answer is forced (default 6; impact notes use 4). */
+  maxToolIterations?: number;
+  /**
+   * Impact note (B1.3): the fixed prompt is stored hidden (kind impact_request) and the reply as kind
+   * impact. Proposals are allowed only when an overrun has no rule-engine fix (blockProposals is the reason otherwise).
+   */
+  impact?: { blockProposals: string | null };
+};
+
 export async function runAgentTurn(
   ctx: ToolContext & { appName: string },
   llm: LlmClient,
   message: string,
+  opts: TurnOptions = {},
 ): Promise<ChatTurnResponse & { failed: boolean }> {
+  const MAX_TOOL_ITERATIONS = opts.maxToolIterations ?? MAX_ITERATIONS_DEFAULT;
   const startedAt = Date.now();
   // A8: start loading the session's rows now, so the read tools find them ready after the first model call.
   let snap: Promise<SessionData> | null = loadSessionData(ctx.db, ctx.sessionId);
@@ -50,7 +63,7 @@ export async function runAgentTurn(
     { role: "user", content: message },
   ];
   const tools = toolDefinitions();
-  const state: TurnState = { proposal: null };
+  const state: TurnState = { proposal: null, blockProposals: opts.impact?.blockProposals ?? null };
   const logs: ToolLog[] = [];
   const usage = { promptTokens: 0, completionTokens: 0, cost: 0, calls: 0 };
   const perCall: { finish: string | null; completion: number; reasoning: number; text_chars: number; tool_calls: number }[] = [];
@@ -64,7 +77,8 @@ export async function runAgentTurn(
   let firstAttempt: { text: string; check: VerifyResult } | null = null;
   let verification: Verification | null = null;
   const outputs = () => logs.map((l) => ({ tool: l.toolName, output: l.output }));
-  const wantsChange = ASKS_FOR_BUDGET_CHANGE.test(message);
+  // No nudge where proposals are blocked (an impact note with nothing the rule engine can't fix).
+  const wantsChange = !state.blockProposals && ASKS_FOR_BUDGET_CHANGE.test(message);
   try {
     for (let iteration = 0; iteration <= MAX_TOOL_ITERATIONS && reply === null; iteration++) {
       const res = await llm.complete({ messages, tools, toolChoice: iteration < MAX_TOOL_ITERATIONS ? "auto" : "none" });
@@ -142,12 +156,16 @@ export async function runAgentTurn(
 
   const turnMs = Date.now() - startedAt;
   const saved = await ctx.db.transaction(async (tx) => {
-    const [user] = await tx.insert(chatMessages).values({ sessionId: ctx.sessionId, role: "user", content: message }).returning();
+    const [user] = await tx
+      .insert(chatMessages)
+      .values({ sessionId: ctx.sessionId, role: "user", content: message, kind: opts.impact ? "impact_request" : "chat" })
+      .returning();
     const [assistant] = await tx
       .insert(chatMessages)
       .values({
         sessionId: ctx.sessionId,
         role: "assistant",
+        kind: opts.impact ? "impact" : "chat",
         content: reply!,
         actionId: state.proposal?.id ?? null,
         verification,
@@ -187,6 +205,7 @@ export async function runAgentTurn(
   const view = (r: typeof saved.user): ChatMessageView => ({
     id: r.id,
     role: r.role,
+    kind: r.kind,
     content: r.content,
     createdAt: r.createdAt.toISOString(),
     proposal: r.actionId && state.proposal?.id === r.actionId ? state.proposal : null,

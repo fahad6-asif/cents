@@ -1,0 +1,1116 @@
+{
+  "generated_at": "2026-10-19T18:40:04.568Z",
+  "note": "Simulated demo account. All data is synthetic.",
+  "summary": {
+    "custom_transaction_logged": true,
+    "checks_after_it": [
+      "action_proposed",
+      "alert_created",
+      "alert_created"
+    ],
+    "impact_note": {
+      "requested": true,
+      "completed": true,
+      "tool_calls": [
+        "get_account_summary",
+        "get_budget_status",
+        "get_transactions",
+        "check_affordability",
+        "get_proposals",
+        "get_upcoming_bills"
+      ]
+    }
+  },
+  "evidence": {
+    "exported_at": "2026-10-19T18:40:04.558Z",
+    "note": "Simulated demo account. All data is synthetic.",
+    "session": {
+      "id": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+      "epoch": 0,
+      "created_at": "2026-10-19T18:39:42.028Z"
+    },
+    "audit_log": [
+      {
+        "id": "ac815535-0782-49ad-bacc-03d6e49c580d",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "epoch": 0,
+        "event": "session_created",
+        "details": {},
+        "createdAt": "2026-10-19T18:39:44.272Z"
+      },
+      {
+        "id": "98716531-6a58-4ed8-a489-10f77c1ad209",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "epoch": 0,
+        "event": "alert_created",
+        "details": {
+          "type": "budget_warning",
+          "facts": {
+            "month": "2026-10",
+            "percent": 88,
+            "category": "Dining",
+            "limit_cents": 30000,
+            "spent_cents": 26500,
+            "overage_cents": 0,
+            "remaining_cents": 3500
+          },
+          "title": "Dining is at 88% of budget",
+          "alert_id": "ae11ed0e-250a-48ac-a688-564669b7ebb8",
+          "dedupe_key": "budget_warning:Dining:2026-10",
+          "proposal_id": null
+        },
+        "createdAt": "2026-10-19T18:39:45.968Z"
+      },
+      {
+        "id": "657b52ff-7457-4d66-926a-e64908d96ecc",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "epoch": 0,
+        "event": "alert_created",
+        "details": {
+          "type": "upcoming_bill",
+          "facts": {
+            "bill": "Internet",
+            "due_date": "2026-10-20",
+            "amount_cents": 4500,
+            "days_until_due": 5
+          },
+          "title": "Internet bill due in 5 days",
+          "alert_id": "03908d58-871d-467b-b2c7-e02de16bd318",
+          "dedupe_key": "upcoming_bill:84dd1de8-0879-4df2-b4a4-d259d4187711",
+          "proposal_id": null
+        },
+        "createdAt": "2026-10-19T18:39:46.388Z"
+      },
+      {
+        "id": "af98db88-24bc-4d59-9c01-e7f9a6981446",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "epoch": 0,
+        "event": "alert_created",
+        "details": {
+          "type": "upcoming_bill",
+          "facts": {
+            "bill": "Phone",
+            "due_date": "2026-10-22",
+            "amount_cents": 3000,
+            "days_until_due": 7
+          },
+          "title": "Phone bill due in 7 days",
+          "alert_id": "17f8a602-d5cc-40ef-bb6b-d00100c46eba",
+          "dedupe_key": "upcoming_bill:cb323484-0f86-408d-9036-b8511f5fe252",
+          "proposal_id": null
+        },
+        "createdAt": "2026-10-19T18:39:46.876Z"
+      },
+      {
+        "id": "30cefb3b-c1ed-4186-9c4a-a47fd2ae62dd",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "epoch": 0,
+        "event": "transaction_simulated",
+        "details": {
+          "origin": "custom",
+          "category": "Entertainment",
+          "event_id": null,
+          "amount_cents": -12000,
+          "paid_bill_id": null,
+          "transaction_id": "626127bf-4b20-4a09-81e9-03fa8bc57fad",
+          "idempotency_key": "aa94fc93-ec10-47b1-812a-a83916c105da",
+          "merchant_length": 15
+        },
+        "createdAt": "2026-10-19T18:39:49.822Z"
+      },
+      {
+        "id": "73821b3c-29a5-4acd-9614-e80b3aebd402",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "epoch": 0,
+        "event": "action_proposed",
+        "details": {
+          "origin": "alert",
+          "changes": [
+            {
+              "month": "2026-10",
+              "category": "Shopping",
+              "new_limit_cents": 20500,
+              "old_limit_cents": 25000
+            },
+            {
+              "month": "2026-10",
+              "category": "Entertainment",
+              "new_limit_cents": 19500,
+              "old_limit_cents": 15000
+            }
+          ],
+          "action_id": "5af55314-08ca-4132-85bd-321ba74fbd0d",
+          "dedupe_key": "budget_overrun:Entertainment:2026-10"
+        },
+        "createdAt": "2026-10-19T18:39:51.407Z"
+      },
+      {
+        "id": "eaca941c-7ed2-4b0b-9be8-ba281fdb402f",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "epoch": 0,
+        "event": "alert_created",
+        "details": {
+          "type": "budget_overrun",
+          "facts": {
+            "month": "2026-10",
+            "percent": 129,
+            "category": "Entertainment",
+            "limit_cents": 15000,
+            "spent_cents": 19350,
+            "overage_cents": 4350,
+            "remaining_cents": 0
+          },
+          "title": "Entertainment is over budget",
+          "alert_id": "60c75ba7-1dc2-41ff-b6ef-5e5ffd415174",
+          "dedupe_key": "budget_overrun:Entertainment:2026-10",
+          "proposal_id": "5af55314-08ca-4132-85bd-321ba74fbd0d"
+        },
+        "createdAt": "2026-10-19T18:39:51.829Z"
+      },
+      {
+        "id": "59d6e077-ff4f-423a-a697-ed1f67e29a4c",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "epoch": 0,
+        "event": "alert_created",
+        "details": {
+          "type": "unusual_spending",
+          "facts": {
+            "date": "2026-10-15",
+            "category": "Entertainment",
+            "merchant": "Concert tickets",
+            "multiple": 4.2,
+            "amount_cents": 12000,
+            "median_cents": 2829,
+            "lookback_days": 90
+          },
+          "title": "Unusual Entertainment purchase",
+          "alert_id": "f98d0686-5210-4dec-8fb7-d28899bf932b",
+          "dedupe_key": "unusual_spending:626127bf-4b20-4a09-81e9-03fa8bc57fad",
+          "proposal_id": null
+        },
+        "createdAt": "2026-10-19T18:39:52.244Z"
+      },
+      {
+        "id": "ee821c8a-d337-4160-a38e-5884ca973acd",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "epoch": 0,
+        "event": "impact_note_requested",
+        "details": {
+          "transaction_ids": [
+            "626127bf-4b20-4a09-81e9-03fa8bc57fad"
+          ]
+        },
+        "createdAt": "2026-10-19T18:39:55.165Z"
+      },
+      {
+        "id": "55feb814-90b6-472d-839f-578d6cdaa9a8",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "epoch": 0,
+        "event": "chat_message",
+        "details": {
+          "calls": [
+            {
+              "finish": "tool_calls",
+              "reasoning": 0,
+              "completion": 371,
+              "text_chars": 92,
+              "tool_calls": 6
+            },
+            {
+              "finish": "stop",
+              "reasoning": 0,
+              "completion": 381,
+              "text_chars": 949,
+              "tool_calls": 0
+            }
+          ],
+          "model": "anthropic/claude-haiku-5.5",
+          "tools": [
+            "get_account_summary",
+            "get_budget_status",
+            "get_transactions",
+            "check_affordability",
+            "get_proposals",
+            "get_upcoming_bills"
+          ],
+          "failed": false,
+          "cost_usd": 0.000938,
+          "message_id": "cbb512e4-bdff-43a1-96f0-8cb9741ddb99",
+          "model_calls": 2,
+          "proposal_id": null,
+          "prompt_tokens": 13721,
+          "proposal_nudge": false,
+          "completion_tokens": 752
+        },
+        "createdAt": "2026-10-19T18:40:01.434Z"
+      },
+      {
+        "id": "08bc97d7-1520-4b19-889a-bb42d93e742f",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "epoch": 0,
+        "event": "reply_verified",
+        "details": {
+          "retried": false,
+          "message_id": "cbb512e4-bdff-43a1-96f0-8cb9741ddb99",
+          "total_count": 17,
+          "verified_count": 17
+        },
+        "createdAt": "2026-10-19T18:40:01.643Z"
+      },
+      {
+        "id": "24d584d7-6a89-48a1-9db2-0c5e91f2670f",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "epoch": 0,
+        "event": "impact_note_completed",
+        "details": {
+          "failed": false,
+          "message_id": "cbb512e4-bdff-43a1-96f0-8cb9741ddb99",
+          "tool_count": 6,
+          "proposal_id": null
+        },
+        "createdAt": "2026-10-19T18:40:01.955Z"
+      }
+    ],
+    "tool_calls": [
+      {
+        "id": "68775ed7-4110-4c78-ae57-9fd98f746d42",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "messageId": "cbb512e4-bdff-43a1-96f0-8cb9741ddb99",
+        "toolName": "get_account_summary",
+        "input": {},
+        "output": {
+          "note": "Spending excludes transfers to savings. Net = money in − money out.",
+          "month": "2026-10",
+          "today": {
+            "iso": "2026-10-15",
+            "label": "Thu 15 Oct"
+          },
+          "account": "Everyday Checking (simulated)",
+          "balance": {
+            "usd": "$5,722.13",
+            "cents": 572213
+          },
+          "month_to_date": {
+            "net": {
+              "usd": "$798.28",
+              "cents": 79828
+            },
+            "income": {
+              "usd": "$6,400.00",
+              "cents": 640000
+            },
+            "money_in": {
+              "usd": "$6,400.00",
+              "cents": 640000
+            },
+            "spending": {
+              "usd": "$2,601.72",
+              "cents": 260172
+            },
+            "money_out": {
+              "usd": "$5,601.72",
+              "cents": 560172
+            },
+            "transfers_out": {
+              "usd": "$3,000.00",
+              "cents": 300000
+            }
+          },
+          "next_income_date": {
+            "iso": "2026-11-14",
+            "label": "Sat 14 Nov"
+          },
+          "balance_change_pct": 16.2,
+          "start_of_month_balance": {
+            "usd": "$4,923.85",
+            "cents": 492385
+          }
+        },
+        "ok": true,
+        "durationMs": 3,
+        "createdAt": "2026-10-19T18:40:01.226Z"
+      },
+      {
+        "id": "1fa4f33b-dfcd-47ec-881a-1f435fa755e8",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "messageId": "cbb512e4-bdff-43a1-96f0-8cb9741ddb99",
+        "toolName": "get_budget_status",
+        "input": {
+          "month": "2026-10"
+        },
+        "output": {
+          "month": "2026-10",
+          "totals": {
+            "limit": {
+              "usd": "$3,890.00",
+              "cents": 389000
+            },
+            "spent": {
+              "usd": "$2,601.72",
+              "cents": 260172
+            }
+          },
+          "budgets": [
+            {
+              "limit": {
+                "usd": "$1,850.00",
+                "cents": 185000
+              },
+              "spent": {
+                "usd": "$1,450.00",
+                "cents": 145000
+              },
+              "state": "ok",
+              "over_by": {
+                "usd": "$0.00",
+                "cents": 0
+              },
+              "category": "Housing",
+              "remaining": {
+                "usd": "$400.00",
+                "cents": 40000
+              },
+              "utilization_pct": 78.4
+            },
+            {
+              "limit": {
+                "usd": "$300.00",
+                "cents": 30000
+              },
+              "spent": {
+                "usd": "$92.91",
+                "cents": 9291
+              },
+              "state": "ok",
+              "over_by": {
+                "usd": "$0.00",
+                "cents": 0
+              },
+              "category": "Utilities",
+              "remaining": {
+                "usd": "$207.09",
+                "cents": 20709
+              },
+              "utilization_pct": 31
+            },
+            {
+              "limit": {
+                "usd": "$600.00",
+                "cents": 60000
+              },
+              "spent": {
+                "usd": "$312.36",
+                "cents": 31236
+              },
+              "state": "ok",
+              "over_by": {
+                "usd": "$0.00",
+                "cents": 0
+              },
+              "category": "Groceries",
+              "remaining": {
+                "usd": "$287.64",
+                "cents": 28764
+              },
+              "utilization_pct": 52.1
+            },
+            {
+              "limit": {
+                "usd": "$300.00",
+                "cents": 30000
+              },
+              "spent": {
+                "usd": "$265.00",
+                "cents": 26500
+              },
+              "state": "warning",
+              "over_by": {
+                "usd": "$0.00",
+                "cents": 0
+              },
+              "category": "Dining",
+              "remaining": {
+                "usd": "$35.00",
+                "cents": 3500
+              },
+              "utilization_pct": 88.3
+            },
+            {
+              "limit": {
+                "usd": "$250.00",
+                "cents": 25000
+              },
+              "spent": {
+                "usd": "$118.40",
+                "cents": 11840
+              },
+              "state": "ok",
+              "over_by": {
+                "usd": "$0.00",
+                "cents": 0
+              },
+              "category": "Transport",
+              "remaining": {
+                "usd": "$131.60",
+                "cents": 13160
+              },
+              "utilization_pct": 47.4
+            },
+            {
+              "limit": {
+                "usd": "$250.00",
+                "cents": 25000
+              },
+              "spent": {
+                "usd": "$95.12",
+                "cents": 9512
+              },
+              "state": "ok",
+              "over_by": {
+                "usd": "$0.00",
+                "cents": 0
+              },
+              "category": "Shopping",
+              "remaining": {
+                "usd": "$154.88",
+                "cents": 15488
+              },
+              "utilization_pct": 38
+            },
+            {
+              "limit": {
+                "usd": "$150.00",
+                "cents": 15000
+              },
+              "spent": {
+                "usd": "$193.50",
+                "cents": 19350
+              },
+              "state": "overrun",
+              "over_by": {
+                "usd": "$43.50",
+                "cents": 4350
+              },
+              "category": "Entertainment",
+              "remaining": {
+                "usd": "$0.00",
+                "cents": 0
+              },
+              "utilization_pct": 129
+            },
+            {
+              "limit": {
+                "usd": "$40.00",
+                "cents": 4000
+              },
+              "spent": {
+                "usd": "$12.98",
+                "cents": 1298
+              },
+              "state": "ok",
+              "over_by": {
+                "usd": "$0.00",
+                "cents": 0
+              },
+              "category": "Subscriptions",
+              "remaining": {
+                "usd": "$27.02",
+                "cents": 2702
+              },
+              "utilization_pct": 32.5
+            },
+            {
+              "limit": {
+                "usd": "$150.00",
+                "cents": 15000
+              },
+              "spent": {
+                "usd": "$61.45",
+                "cents": 6145
+              },
+              "state": "ok",
+              "over_by": {
+                "usd": "$0.00",
+                "cents": 0
+              },
+              "category": "Health",
+              "remaining": {
+                "usd": "$88.55",
+                "cents": 8855
+              },
+              "utilization_pct": 41
+            }
+          ],
+          "spending_counted_through": {
+            "iso": "2026-10-15",
+            "label": "Thu 15 Oct"
+          }
+        },
+        "ok": true,
+        "durationMs": 3,
+        "createdAt": "2026-10-19T18:40:01.226Z"
+      },
+      {
+        "id": "a09acbfd-e6a2-4168-90fb-7c0a8e62bb40",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "messageId": "cbb512e4-bdff-43a1-96f0-8cb9741ddb99",
+        "toolName": "get_transactions",
+        "input": {
+          "limit": 5,
+          "month": "2026-10",
+          "category": "Entertainment"
+        },
+        "output": {
+          "filters": {
+            "month": "2026-10",
+            "through": {
+              "iso": "2026-10-15",
+              "label": "Thu 15 Oct"
+            },
+            "category": "Entertainment"
+          },
+          "by_merchant": [
+            {
+              "data": {
+                "merchant": "Concert tickets"
+              },
+              "count": 1,
+              "total": {
+                "usd": "−$120.00",
+                "cents": -12000
+              }
+            },
+            {
+              "data": {
+                "merchant": "Cinema"
+              },
+              "count": 2,
+              "total": {
+                "usd": "−$73.50",
+                "cents": -7350
+              }
+            }
+          ],
+          "transactions": [
+            {
+              "data": {
+                "merchant": "Concert tickets"
+              },
+              "date": {
+                "iso": "2026-10-15",
+                "label": "Thu 15 Oct"
+              },
+              "type": "expense",
+              "amount": {
+                "usd": "−$120.00",
+                "cents": -12000
+              },
+              "category": "Entertainment",
+              "simulated": true
+            },
+            {
+              "data": {
+                "merchant": "Cinema"
+              },
+              "date": {
+                "iso": "2026-10-03",
+                "label": "Sat 3 Oct"
+              },
+              "type": "expense",
+              "amount": {
+                "usd": "−$29.93",
+                "cents": -2993
+              },
+              "category": "Entertainment",
+              "simulated": false
+            },
+            {
+              "data": {
+                "merchant": "Cinema"
+              },
+              "date": {
+                "iso": "2026-10-02",
+                "label": "Fri 2 Oct"
+              },
+              "type": "expense",
+              "amount": {
+                "usd": "−$43.57",
+                "cents": -4357
+              },
+              "category": "Entertainment",
+              "simulated": false
+            }
+          ],
+          "matching_count": 3,
+          "returned_count": 3,
+          "matching_income_total": {
+            "usd": "$0.00",
+            "cents": 0
+          },
+          "matching_expenses_total": {
+            "usd": "$193.50",
+            "cents": 19350
+          }
+        },
+        "ok": true,
+        "durationMs": 4,
+        "createdAt": "2026-10-19T18:40:01.226Z"
+      },
+      {
+        "id": "87822ec7-bdb0-4dc5-a4ea-7cf7f5cdfae7",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "messageId": "cbb512e4-bdff-43a1-96f0-8cb9741ddb99",
+        "toolName": "check_affordability",
+        "input": {
+          "amount_cents": 12000
+        },
+        "output": {
+          "balance": {
+            "usd": "$5,722.13",
+            "cents": 572213
+          },
+          "purchase": {
+            "usd": "$120.00",
+            "cents": 12000
+          },
+          "affordable": true,
+          "assumptions": [
+            "Next income expected on Sat 14 Nov (salary on the 14th).",
+            "Counts unpaid bills due on or before the next income date.",
+            "Reserves the rest of this month's essential budgets (Housing, Utilities, Groceries, Transport, Health), excluding bills already counted.",
+            "Simulated account; no other accounts or pending card transactions are included."
+          ],
+          "bills_total": {
+            "usd": "$1,660.99",
+            "cents": 166099
+          },
+          "bills_counted": [
+            {
+              "name": "Internet",
+              "amount": {
+                "usd": "$45.00",
+                "cents": 4500
+              },
+              "due_date": {
+                "iso": "2026-10-20",
+                "label": "Tue 20 Oct"
+              }
+            },
+            {
+              "name": "Phone",
+              "amount": {
+                "usd": "$30.00",
+                "cents": 3000
+              },
+              "due_date": {
+                "iso": "2026-10-22",
+                "label": "Thu 22 Oct"
+              }
+            },
+            {
+              "name": "Electricity",
+              "amount": {
+                "usd": "$120.00",
+                "cents": 12000
+              },
+              "due_date": {
+                "iso": "2026-10-25",
+                "label": "Sun 25 Oct"
+              }
+            },
+            {
+              "name": "Streaming",
+              "amount": {
+                "usd": "$15.99",
+                "cents": 1599
+              },
+              "due_date": {
+                "iso": "2026-10-28",
+                "label": "Wed 28 Oct"
+              }
+            },
+            {
+              "name": "Rent",
+              "amount": {
+                "usd": "$1,450.00",
+                "cents": 145000
+              },
+              "due_date": {
+                "iso": "2026-11-01",
+                "label": "Sun 1 Nov"
+              }
+            }
+          ],
+          "disposable_funds": {
+            "usd": "$3,141.26",
+            "cents": 314126
+          },
+          "next_income_date": {
+            "iso": "2026-11-14",
+            "label": "Sat 14 Nov"
+          },
+          "balance_after_purchase": {
+            "usd": "$5,602.13",
+            "cents": 560213
+          },
+          "essential_reserved_total": {
+            "usd": "$919.88",
+            "cents": 91988
+          },
+          "disposable_after_purchase": {
+            "usd": "$3,021.26",
+            "cents": 302126
+          },
+          "essential_budget_reserved": [
+            {
+              "category": "Housing",
+              "reserved": {
+                "usd": "$400.00",
+                "cents": 40000
+              }
+            },
+            {
+              "category": "Utilities",
+              "reserved": {
+                "usd": "$12.09",
+                "cents": 1209
+              }
+            },
+            {
+              "category": "Groceries",
+              "reserved": {
+                "usd": "$287.64",
+                "cents": 28764
+              }
+            },
+            {
+              "category": "Transport",
+              "reserved": {
+                "usd": "$131.60",
+                "cents": 13160
+              }
+            },
+            {
+              "category": "Health",
+              "reserved": {
+                "usd": "$88.55",
+                "cents": 8855
+              }
+            }
+          ]
+        },
+        "ok": true,
+        "durationMs": 4,
+        "createdAt": "2026-10-19T18:40:01.226Z"
+      },
+      {
+        "id": "0ec47654-3d0b-4af8-b549-e7a1fd9fe23d",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "messageId": "cbb512e4-bdff-43a1-96f0-8cb9741ddb99",
+        "toolName": "get_proposals",
+        "input": {
+          "limit": 5,
+          "status": "all"
+        },
+        "output": {
+          "note": "Statuses are live from the database. Times are real clock (UTC).",
+          "counts": {
+            "stale": 0,
+            "failed": 0,
+            "pending": 1,
+            "executed": 0,
+            "rejected": 0
+          },
+          "proposals": [
+            {
+              "id": "5af55314-08ca-4132-85bd-321ba74fbd0d",
+              "origin": "alert",
+              "status": "pending",
+              "changes": [
+                {
+                  "delta": {
+                    "usd": "−$45.00",
+                    "cents": -4500
+                  },
+                  "month": "2026-10",
+                  "category": "Shopping",
+                  "new_limit": {
+                    "usd": "$205.00",
+                    "cents": 20500
+                  },
+                  "old_limit": {
+                    "usd": "$250.00",
+                    "cents": 25000
+                  },
+                  "month_label": "October 2026"
+                },
+                {
+                  "delta": {
+                    "usd": "$45.00",
+                    "cents": 4500
+                  },
+                  "month": "2026-10",
+                  "category": "Entertainment",
+                  "new_limit": {
+                    "usd": "$195.00",
+                    "cents": 19500
+                  },
+                  "old_limit": {
+                    "usd": "$150.00",
+                    "cents": 15000
+                  },
+                  "month_label": "October 2026"
+                }
+              ],
+              "created_at": {
+                "iso": "2026-10-19T18:39:48.359Z",
+                "label": "19 Oct, 18:39 UTC"
+              },
+              "decided_at": null,
+              "executed_at": null,
+              "rationale_data": {
+                "text": "Entertainment is $43.50 over its $150.00 budget. Moving $45.00 from Shopping ($154.88 left) covers it without raising total planned spending."
+              }
+            }
+          ],
+          "returned_count": 1
+        },
+        "ok": true,
+        "durationMs": 213,
+        "createdAt": "2026-10-19T18:40:01.226Z"
+      },
+      {
+        "id": "3f972df9-253c-4411-b591-a83b0d8559cd",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "messageId": "cbb512e4-bdff-43a1-96f0-8cb9741ddb99",
+        "toolName": "get_upcoming_bills",
+        "input": {
+          "days": 14
+        },
+        "output": {
+          "as_of": {
+            "iso": "2026-10-15",
+            "label": "Thu 15 Oct"
+          },
+          "bills": [
+            {
+              "name": "Internet",
+              "amount": {
+                "usd": "$45.00",
+                "cents": 4500
+              },
+              "category": "Utilities",
+              "due_date": {
+                "iso": "2026-10-20",
+                "label": "Tue 20 Oct"
+              },
+              "days_until_due": 5
+            },
+            {
+              "name": "Phone",
+              "amount": {
+                "usd": "$30.00",
+                "cents": 3000
+              },
+              "category": "Utilities",
+              "due_date": {
+                "iso": "2026-10-22",
+                "label": "Thu 22 Oct"
+              },
+              "days_until_due": 7
+            },
+            {
+              "name": "Electricity",
+              "amount": {
+                "usd": "$120.00",
+                "cents": 12000
+              },
+              "category": "Utilities",
+              "due_date": {
+                "iso": "2026-10-25",
+                "label": "Sun 25 Oct"
+              },
+              "days_until_due": 10
+            },
+            {
+              "name": "Streaming",
+              "amount": {
+                "usd": "$15.99",
+                "cents": 1599
+              },
+              "category": "Subscriptions",
+              "due_date": {
+                "iso": "2026-10-28",
+                "label": "Wed 28 Oct"
+              },
+              "days_until_due": 13
+            }
+          ],
+          "total": {
+            "usd": "$210.99",
+            "cents": 21099
+          },
+          "window_days": 14
+        },
+        "ok": true,
+        "durationMs": 4,
+        "createdAt": "2026-10-19T18:40:01.226Z"
+      }
+    ],
+    "agent_actions": [
+      {
+        "id": "5af55314-08ca-4132-85bd-321ba74fbd0d",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "type": "budget_adjustment",
+        "changes": [
+          {
+            "month": "2026-10",
+            "category": "Shopping",
+            "new_limit_cents": 20500,
+            "old_limit_cents": 25000
+          },
+          {
+            "month": "2026-10",
+            "category": "Entertainment",
+            "new_limit_cents": 19500,
+            "old_limit_cents": 15000
+          }
+        ],
+        "rationale": "Entertainment is $43.50 over its $150.00 budget. Moving $45.00 from Shopping ($154.88 left) covers it without raising total planned spending.",
+        "origin": "alert",
+        "status": "pending",
+        "result": null,
+        "meta": null,
+        "createdAt": "2026-10-19T18:39:48.359Z",
+        "decidedAt": null,
+        "executedAt": null
+      }
+    ],
+    "alerts": [
+      {
+        "id": "ae11ed0e-250a-48ac-a688-564669b7ebb8",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "type": "budget_warning",
+        "dedupeKey": "budget_warning:Dining:2026-10",
+        "title": "Dining is at 88% of budget",
+        "body": "You've spent $265.00 of your $300.00 Dining budget for October, with $35.00 left.",
+        "facts": {
+          "month": "2026-10",
+          "percent": 88,
+          "category": "Dining",
+          "limit_cents": 30000,
+          "spent_cents": 26500,
+          "overage_cents": 0,
+          "remaining_cents": 3500
+        },
+        "severity": 2,
+        "status": "active",
+        "relatedTransactionId": null,
+        "relatedBillId": null,
+        "proposalId": null,
+        "createdAt": "2026-10-19T18:39:42.028Z",
+        "updatedAt": "2026-10-19T18:39:42.028Z"
+      },
+      {
+        "id": "03908d58-871d-467b-b2c7-e02de16bd318",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "type": "upcoming_bill",
+        "dedupeKey": "upcoming_bill:84dd1de8-0879-4df2-b4a4-d259d4187711",
+        "title": "Internet bill due in 5 days",
+        "body": "Internet ($45.00) is due on 20 Oct.",
+        "facts": {
+          "bill": "Internet",
+          "due_date": "2026-10-20",
+          "amount_cents": 4500,
+          "days_until_due": 5
+        },
+        "severity": 1,
+        "status": "active",
+        "relatedTransactionId": null,
+        "relatedBillId": "84dd1de8-0879-4df2-b4a4-d259d4187711",
+        "proposalId": null,
+        "createdAt": "2026-10-19T18:39:42.028Z",
+        "updatedAt": "2026-10-19T18:39:42.028Z"
+      },
+      {
+        "id": "17f8a602-d5cc-40ef-bb6b-d00100c46eba",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "type": "upcoming_bill",
+        "dedupeKey": "upcoming_bill:cb323484-0f86-408d-9036-b8511f5fe252",
+        "title": "Phone bill due in 7 days",
+        "body": "Phone ($30.00) is due on 22 Oct.",
+        "facts": {
+          "bill": "Phone",
+          "due_date": "2026-10-22",
+          "amount_cents": 3000,
+          "days_until_due": 7
+        },
+        "severity": 1,
+        "status": "active",
+        "relatedTransactionId": null,
+        "relatedBillId": "cb323484-0f86-408d-9036-b8511f5fe252",
+        "proposalId": null,
+        "createdAt": "2026-10-19T18:39:42.028Z",
+        "updatedAt": "2026-10-19T18:39:42.028Z"
+      },
+      {
+        "id": "60c75ba7-1dc2-41ff-b6ef-5e5ffd415174",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "type": "budget_overrun",
+        "dedupeKey": "budget_overrun:Entertainment:2026-10",
+        "title": "Entertainment is over budget",
+        "body": "Entertainment is $43.50 over its $150.00 October budget ($193.50 spent).",
+        "facts": {
+          "month": "2026-10",
+          "percent": 129,
+          "category": "Entertainment",
+          "limit_cents": 15000,
+          "spent_cents": 19350,
+          "overage_cents": 4350,
+          "remaining_cents": 0
+        },
+        "severity": 4,
+        "status": "active",
+        "relatedTransactionId": null,
+        "relatedBillId": null,
+        "proposalId": "5af55314-08ca-4132-85bd-321ba74fbd0d",
+        "createdAt": "2026-10-19T18:39:48.359Z",
+        "updatedAt": "2026-10-19T18:39:48.359Z"
+      },
+      {
+        "id": "f98d0686-5210-4dec-8fb7-d28899bf932b",
+        "sessionId": "0d694508-e3a9-4908-a1bf-c2ed0aff8c95",
+        "type": "unusual_spending",
+        "dedupeKey": "unusual_spending:626127bf-4b20-4a09-81e9-03fa8bc57fad",
+        "title": "Unusual Entertainment purchase",
+        "body": "$120.00 on 15 Oct is about 4.2× your typical Entertainment purchase of $28.29.",
+        "facts": {
+          "date": "2026-10-15",
+          "category": "Entertainment",
+          "merchant": "Concert tickets",
+          "multiple": 4.2,
+          "amount_cents": 12000,
+          "median_cents": 2829,
+          "lookback_days": 90
+        },
+        "severity": 3,
+        "status": "active",
+        "relatedTransactionId": "626127bf-4b20-4a09-81e9-03fa8bc57fad",
+        "relatedBillId": null,
+        "proposalId": null,
+        "createdAt": "2026-10-19T18:39:48.359Z",
+        "updatedAt": "2026-10-19T18:39:48.359Z"
+      }
+    ],
+    "verification": {
+      "replies_checked": 1,
+      "replies_with_figures": 1,
+      "replies_verified": 1,
+      "replies_partial": 0,
+      "replies_retried": 0,
+      "figures_checked": 17,
+      "figures_matched": 17,
+      "verified_rate": 100
+    }
+  }
+}

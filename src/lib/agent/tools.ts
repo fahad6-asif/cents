@@ -4,7 +4,7 @@
  * approve, execute, delete or SQL tool. Every input is zod-validated and every query is scoped to
  * the caller's session. User-originated strings (merchant names) are wrapped in a "data" field.
  */
-import { and, desc, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { audit } from "@/lib/db/audit";
 import { toProposalView } from "@/lib/db/chat";
@@ -52,7 +52,12 @@ type Tool<S extends z.ZodType = z.ZodType> = {
 };
 
 /** Mutable per-turn state the loop reads after tools run. */
-export type TurnState = { proposal: ProposalView | null; overrunFix?: OverrunFix | null };
+export type TurnState = {
+  proposal: ProposalView | null;
+  overrunFix?: OverrunFix | null;
+  /** When set, propose_budget_adjustment refuses with this reason (impact notes without an unfixable overrun). */
+  blockProposals?: string | null;
+};
 
 function tool<S extends z.ZodType>(t: Tool<S>): Tool<S> {
   return t;
@@ -505,6 +510,7 @@ export const TOOLS = [
       })
       .strict(),
     async run(ctx, input, state) {
+      if (state.blockProposals) return { ok: false, errors: [state.blockProposals], note: "No proposal was created." };
       const current = monthOf(ctx.today);
       const rows = await ctx.db.select().from(budgets).where(eq(budgets.sessionId, ctx.sessionId));
       const limitOf = (category: string, month: string) => rows.find((r) => r.category === category && r.month === month)?.limitCents;

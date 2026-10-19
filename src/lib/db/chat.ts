@@ -66,6 +66,7 @@ export async function loadChat(db: DbOrTx, sessionId: string): Promise<ChatMessa
   return rows.map((r) => ({
     id: r.id,
     role: r.role,
+    kind: r.kind,
     content: r.content,
     createdAt: r.createdAt.toISOString(),
     proposal: r.actionId ? (proposals.get(r.actionId) ?? null) : null,

@@ -34,6 +34,8 @@ export type ProposalView = {
 export type ChatMessageView = {
   id: string;
   role: "user" | "assistant";
+  /** "impact" = AI impact note after a custom transaction; "impact_request" = its hidden fixed prompt. */
+  kind: "chat" | "impact_request" | "impact";
   content: string;
   createdAt: string;
   proposal: ProposalView | null;

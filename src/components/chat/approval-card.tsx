@@ -111,7 +111,7 @@ export function ApprovalCard({ proposal, busy, onApprove, onReject }: Props) {
           className="tabular mt-1 text-[12px] font-medium text-warning"
         >
           {fix.category} stays {formatUSD(fix.uncovered_cents)} over in{" "}
-          {monthName(fix.month)}: there isn't enough room elsewhere to cover it
+          {monthName(fix.month)}: there isn&apos;t enough room elsewhere to cover it
           all.
         </p>
       )}
