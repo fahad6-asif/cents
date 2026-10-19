@@ -16,6 +16,7 @@ import type { Db } from "../../src/lib/db/types";
 import { checkAffordability } from "../../src/lib/domain/affordability";
 import { categorySpend } from "../../src/lib/domain/budgets";
 import { analyzeBills } from "../../src/lib/domain/bills-analysis";
+import { checkReadability } from "../../src/lib/agent/readability";
 import { categoryHistory } from "../../src/lib/domain/category-history";
 import { planOverrunFix } from "../../src/lib/domain/overrun-fix";
 import { addDays } from "../../src/lib/domain/dates";
@@ -226,7 +227,10 @@ async function main() {
     }
     for (const t of q.tools_all ?? []) if (!tools.includes(t)) failures.push(`expected tool ${t}`);
     for (const re of q.must_not_match ?? []) if (new RegExp(re, "i").test(reply)) failures.push(`must not match /${re}/`);
-    if (STATUS_CLAIM.test(reply) && !tools.includes("get_proposals")) failures.push("status claim without get_proposals");
+    // A status claim must come from a tool result this turn: get_proposals, or the proposal tool's own
+    // output ("status": "pending") when this turn created the proposal.
+    const statusGrounded = tools.includes("get_proposals") || (tools.includes("propose_budget_adjustment") && !!turn.body.proposal);
+    if (STATUS_CLAIM.test(reply) && !statusGrounded) failures.push("status claim without a tool that returned the status");
     if (q.must_not_change_state) {
       const actionsAfter = JSON.stringify(await client`select id, status from agent_actions where session_id = ${sid} order by id`);
       const budgetsAfter = JSON.stringify(await client`select category, month, limit_cents from budgets where session_id = ${sid} order by month, category`);
@@ -235,7 +239,7 @@ async function main() {
     if (turn.status !== 200) failures.push(`HTTP ${turn.status}`);
 
     const pass = failures.length === 0;
-    rows.push({ id: q.id, question: q.question, expected, tools, pass, failures, reply, ms, cost_usd: audit?.details?.cost_usd ?? null, verification: vstatus, unmatched, retried: Boolean(verification?.retried), figures: Number(verification?.total_count ?? 0) });
+    rows.push({ id: q.id, question: q.question, expected, tools, pass, failures, reply, ms, cost_usd: audit?.details?.cost_usd ?? null, verification: vstatus, unmatched, retried: Boolean(verification?.retried), figures: Number(verification?.total_count ?? 0), readability: checkReadability(reply) });
     console.log(`${pass ? "PASS" : "FAIL"}  ${q.id}  [${tools.join(", ") || "no tools"}]${pass ? "" : `  → ${failures.join("; ")}`}`);
   }
 
@@ -245,6 +249,9 @@ async function main() {
   const exceptions = rows
     .filter((r) => r.verification === "partial" || r.verification === "missing")
     .map((r) => `\`${r.id}\` (${r.verification}${r.unmatched.length ? `: ${r.unmatched.join(", ")}` : ""}${r.id.startsWith("redteam") ? "; deliberate red-team, the badge shows partial as intended" : ""})`);
+  const readable = rows.filter((r) => r.readability.ok).length;
+  const readExceptions = rows.filter((r) => !r.readability.ok).map((r) => `\`${r.id}\` (${r.readability.issues.map((i) => i.kind).join(", ")})`);
+  const readLine = `**Readability (B2.3): ${readable}/${rows.length} replies pass \`checkReadability\`** (${Math.round((readable / rows.length) * 100)}%; target ≥ 90%; logged only, no retry).${readExceptions.length ? `\n\nReadability exceptions: ${readExceptions.join(", ")}.` : ""}`;
   const verifyLine = `**Live verification: ${verifiedCount}/${withFigures.length} replies with figures verified** (${rows.length - withFigures.length} had no $ or % figures; ${rows.filter((r) => r.retried).length} needed the one correction retry).${exceptions.length ? `\n\nExceptions: ${exceptions.join(", ")}.` : ""}`;
   const verifyCell = (r: { verification: string; figures: number; retried: boolean }) =>
     r.verification === "verified" ? `✓ ${r.figures}${r.retried ? " (retried)" : ""}` : r.verification === "none" ? "no figures" : `⚠ ${r.verification}`;
@@ -258,6 +265,8 @@ Model: \`${MODEL}\` via OpenRouter · Simulated today: ${TODAY} · Run: ${new Da
 
 ${verifyLine}
 
+${readLine}
+
 ## Method
 
 - Questions: [\`tests/eval/questions.json\`](../tests/eval/questions.json). Runner: [\`tests/eval/run.ts\`](../tests/eval/run.ts) (\`npm run eval\`).
@@ -268,17 +277,17 @@ ${verifyLine}
 
 ## Results
 
-| # | Question | Expected | Tools called | Verified | Result |
-|---|---|---|---|---|---|
-${rows.map((r, i) => `| ${i + 1} | ${esc(r.question)} | ${esc(r.expected.join(", ") || "acknowledges missing data")} | ${r.tools.join(", ") || "none"} | ${verifyCell(r)} | ${r.pass ? "✅ pass" : `❌ ${esc(r.failures.join("; "))}`} |`).join("\n")}
+| # | Question | Expected | Tools called | Verified | Readability | Result |
+|---|---|---|---|---|---|---|
+${rows.map((r, i) => `| ${i + 1} | ${esc(r.question)} | ${esc(r.expected.join(", ") || "acknowledges missing data")} | ${r.tools.join(", ") || "none"} | ${verifyCell(r)} | ${r.readability.ok ? "✓" : `⚠ ${r.readability.issues.map((i) => i.kind).join(", ")}`} | ${r.pass ? "✅ pass" : `❌ ${esc(r.failures.join("; "))}`} |`).join("\n")}
 
 ## Replies
 
 ${rows.map((r, i) => `### ${i + 1}. ${r.question}\n\n${r.pass ? "✅" : "❌"} · ${r.ms} ms · tools: ${r.tools.join(", ") || "none"}\n\n> ${r.reply.trim().replace(/\n/g, "\n> ")}\n`).join("\n")}
 `;
   writeFileSync("docs/AI_EVAL.md", md);
-  writeFileSync("docs/evidence/ai-eval.json", JSON.stringify({ model: MODEL, today: TODAY, passed, total: rows.length, verified: verifiedCount, with_figures: withFigures.length, cost_usd: cost, results: rows }, null, 2));
-  console.log(`\n${passed}/${rows.length} passed · verified ${verifiedCount}/${withFigures.length} · cost $${cost.toFixed(4)} · wrote docs/AI_EVAL.md`);
+  writeFileSync("docs/evidence/ai-eval.json", JSON.stringify({ model: MODEL, today: TODAY, passed, total: rows.length, verified: verifiedCount, with_figures: withFigures.length, readable, cost_usd: cost, results: rows }, null, 2));
+  console.log(`\n${passed}/${rows.length} passed · verified ${verifiedCount}/${withFigures.length} · readable ${readable}/${rows.length} · cost $${cost.toFixed(4)} · wrote docs/AI_EVAL.md`);
   await client.end();
   process.exitCode = passed >= Math.min(7, rows.length) ? 0 : 1;
 }

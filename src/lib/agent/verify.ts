@@ -64,7 +64,20 @@ function collect(node: unknown, key: string, source: string, into: Allowed): voi
   }
 }
 
+/**
+ * Markdown syntax off, words and figures kept (B2): bullets ("- $45.00" must not read as −$45),
+ * bold, code ticks, table pipes and separator rows. Figures inside bold or cells then match normally.
+ */
+export function stripMarkdown(md: string): string {
+  return md
+    .replace(/^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/gm, " ")
+    .replace(/^\s*(?:[-*+•]|\d+[.)])\s+/gm, "")
+    .replace(/\*\*|__|`/g, "")
+    .replace(/\|/g, " ");
+}
+
 export function verifyReply(replyText: string, toolOutputs: readonly ToolOutput[], userMessage: string): VerifyResult {
+  replyText = stripMarkdown(replyText);
   const allowed: Allowed = { usd: [], pct: [] };
   for (const t of toolOutputs) collect(t.output, "", t.tool, allowed);
   // Figures the user stated themselves ("Can I afford $900?", "cut 10%"), with or without symbols.

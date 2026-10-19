@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkReadability, countFigures, sentences } from "@/lib/agent/readability";
+import { checkReadability, countFigures, ensureBoldLead, sentences } from "@/lib/agent/readability";
 
 const kinds = (md: string) => checkReadability(md).issues.map((i) => i.kind);
 
@@ -61,5 +61,19 @@ describe("checkReadability", () => {
     const wall = "**Ok.** " + "Plain words here and there. ".repeat(70);
     expect(kinds(wall)).toContain("long_without_structure");
     expect(kinds("**Ok.**\n- " + "word ".repeat(400))).not.toContain("long_without_structure");
+  });
+});
+
+describe("ensureBoldLead", () => {
+  it("bolds the first sentence when the first line has no bold, changing no words or figures", () => {
+    expect(ensureBoldLead("I don't have that data. Want me to check budgets?\n\nMore.")).toBe("**I don't have that data.** Want me to check budgets?\n\nMore.");
+    expect(ensureBoldLead("You spent $2,481.72 so far")).toBe("**You spent $2,481.72 so far**");
+    expect(checkReadability(ensureBoldLead("I can't predict that.")).issues.map((i) => i.kind)).not.toContain("first_line_no_bold");
+  });
+
+  it("leaves replies that already lead with bold, a list or a table alone", () => {
+    for (const md of ["**Yes.** Fine.", "- a\n- b", "| a | b |\n|---|---|", "", "Dining is $1.50 over. **Fix it?**"]) {
+      expect(ensureBoldLead(md)).toBe(md);
+    }
   });
 });

@@ -42,7 +42,7 @@ const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 describe("receipts trace", () => {
   it("has a friendly label and summary for every registered tool", () => {
-    expect([...TRACED_TOOLS].sort()).toEqual(TOOLS.map((t) => t.name).sort());
+    expect([...TRACED_TOOLS].sort()).toEqual([...TOOLS.map((t) => t.name), "impact_facts"].sort());
   });
 
   it("summarizes every tool's real output with ≤ 4 key figures and no IDs", async () => {

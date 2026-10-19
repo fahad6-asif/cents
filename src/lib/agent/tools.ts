@@ -454,7 +454,7 @@ export const TOOLS = [
     name: "get_proposals",
     kind: "read",
     description:
-      "Budget-change proposals and their CURRENT status (pending, executed, rejected, stale, failed), newest first, with counts. Call this before saying anything about whether a proposal is waiting, applied or rejected.",
+      "Budget-change proposals and their CURRENT status (pending, executed, rejected, stale, failed), newest first, with counts. Call this before saying anything about whether a proposal is waiting, applied or rejected. When you report a proposal's changes, show them as a table (Category | Current | Proposed), even for one change; summarize rationale_data in your own words with at most 2 figures per sentence instead of quoting it.",
     schema: z
       .object({
         status: z.enum(["pending", "executed", "rejected", "stale", "all"]).default("all"),

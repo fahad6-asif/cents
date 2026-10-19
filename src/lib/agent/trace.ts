@@ -107,6 +107,11 @@ const SPECS: Record<string, Spec> = {
       }),
     ],
   },
+  // Not a model tool: the server's before → after check that opens every impact note (B1.3).
+  impact_facts: {
+    label: () => "Re-checked the account after the new transaction",
+    summarizeForTrace: (o) => (Array.isArray(o.key_figures) ? o.key_figures : []),
+  },
   get_proposals: {
     label: () => "Checked your proposals",
     summarizeForTrace: (o) => [typeof o.counts?.pending === "number" ? `${o.counts.pending} pending` : null, typeof o.counts?.executed === "number" ? `${o.counts.executed} applied` : null],

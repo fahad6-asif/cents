@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { IMPACT_MAX_TOOL_ITERATIONS, IMPACT_MAX_TRANSACTIONS, impactPrompt, impactProposalBlock, loadImpactTransactions } from "@/lib/agent/impact";
+import { IMPACT_MAX_TOOL_ITERATIONS, IMPACT_MAX_TRANSACTIONS, impactFacts, impactPrompt, impactProposalBlock, loadImpactTransactions } from "@/lib/agent/impact";
 import { openRouterClient } from "@/lib/agent/llm";
 import { runAgentTurn } from "@/lib/agent/loop";
 import { checkChatRateLimit, rateLimitConfig } from "@/lib/agent/rate-limit";
@@ -38,11 +38,15 @@ export async function POST(request: Request) {
   }
   await audit(db, session.id, session.epoch, "impact_note_requested", { transaction_ids: txns.map((t) => t.id) });
 
+  // The server's before → after check runs first and is logged like a tool call (receipts + verifier).
+  const started = Date.now();
+  const { facts, keyFigures } = await impactFacts(db, session.id, txns, simToday());
+  const factsLog = { toolName: "impact_facts", input: { transactions: txns.length }, output: { facts, key_figures: keyFigures }, ok: true, durationMs: Date.now() - started };
   const turn = await runAgentTurn(
     { db, sessionId: session.id, epoch: session.epoch, today: simToday(), appName: APP_NAME },
     openRouterClient(),
-    impactPrompt(txns),
-    { maxToolIterations: IMPACT_MAX_TOOL_ITERATIONS, impact: { blockProposals: await impactProposalBlock(db, session.id) } },
+    impactPrompt(txns, facts),
+    { maxToolIterations: IMPACT_MAX_TOOL_ITERATIONS, impact: { blockProposals: await impactProposalBlock(db, session.id) }, priorLogs: [factsLog] },
   );
   await audit(db, session.id, session.epoch, "impact_note_completed", {
     message_id: turn.reply.id,

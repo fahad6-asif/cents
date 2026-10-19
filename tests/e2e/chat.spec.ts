@@ -45,7 +45,8 @@ test("Plan next month's budget → approval card in the thread → Reject change
   const card = page.getByTestId("approval-card");
   await expect(card).toBeVisible({ timeout: 45_000 });
   await expect(card).toHaveAttribute("data-status", "pending");
-  await expect(card).toContainText("Potential savings");
+  // A7: the plan follows 3 months of history (seed: Dining, Groceries, Shopping raised; +$190 in total).
+  await expect(card).toContainText("Increase: total budget +$190.00");
   await page.screenshot({ path: "docs/evidence/screens/phase7-chat-proposal.png" });
   await card.getByTestId("reject").click();
   await expect(page.getByTestId("approval-card")).toHaveAttribute("data-status", "rejected");

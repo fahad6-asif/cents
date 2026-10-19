@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { and, eq } from "drizzle-orm";
 import { FALLBACK_REPLY, MAX_TOOL_ITERATIONS, PROPOSAL_NUDGE, runAgentTurn } from "@/lib/agent/loop";
+import { ensureBoldLead } from "@/lib/agent/readability";
 import { checkChatRateLimit } from "@/lib/agent/rate-limit";
 import { TOOLS, executeTool, toolDefinitions, type ToolContext, type TurnState } from "@/lib/agent/tools";
 import type { LlmClient, LlmRequest, LlmResponse } from "@/lib/agent/types";
@@ -234,7 +235,7 @@ describe("agent loop", () => {
     ]);
     const turn = await runAgentTurn({ ...c, appName: "Cents" }, llm, "How much did I spend?");
     expect(turn.failed).toBe(false);
-    expect(turn.reply.content).toBe("You spent **$2,481.72**.");
+    expect(turn.reply.content).toBe(ensureBoldLead("You spent **$2,481.72**."));
     expect(llm.requests[0].messages[0].role).toBe("system");
     expect(llm.requests[1].messages.at(-1)).toMatchObject({ role: "tool" });
     expect(JSON.parse((llm.requests[1].messages.at(-1) as { content: string }).content).balance.cents).toBe(584_213);
@@ -269,7 +270,7 @@ describe("agent loop", () => {
     expect(llm.requests).toHaveLength(MAX_TOOL_ITERATIONS + 1);
     expect(llm.requests.slice(0, MAX_TOOL_ITERATIONS).every((r) => r.toolChoice === "auto")).toBe(true);
     expect(llm.requests.at(-1)!.toolChoice).toBe("none");
-    expect(turn.reply.content).toBe("Final");
+    expect(turn.reply.content).toBe(ensureBoldLead("Final"));
   });
 
   it("attaches a proposal created during the turn to the reply", async () => {
@@ -311,7 +312,7 @@ describe("agent loop", () => {
     const turn = await runAgentTurn({ ...c, appName: "Cents" }, llm, "Plan next month");
     expect(llm.requests[1].messages.at(-1)).toMatchObject({ role: "user", content: PROPOSAL_NUDGE });
     expect(turn.proposal).toMatchObject({ status: "pending", totalDeltaCents: -5_000 });
-    expect(turn.reply.content).toBe("Proposed: Dining −$50.00. Approve it in the app.");
+    expect(turn.reply.content).toBe(ensureBoldLead("Proposed: Dining −$50.00. Approve it in the app."));
     expect((await loadChat(db, c.sessionId)).map((m) => m.content)).not.toContain(PROPOSAL_NUDGE);
   });
 
@@ -330,7 +331,7 @@ describe("agent loop", () => {
       { content: "I won't create a proposal.", toolCalls: [], usage: null },
     ]);
     const turn = await runAgentTurn({ ...c, appName: "Cents" }, llm, "Plan next month's budget with Dining at $250");
-    expect(turn.reply.content).toBe("Plan: Dining $300.00 → $250.00.");
+    expect(turn.reply.content).toBe(ensureBoldLead("Plan: Dining $300.00 → $250.00."));
     expect(turn.reply.verification).toMatchObject({ status: "verified", total_count: 2, retried: false });
   });
 
@@ -368,7 +369,7 @@ describe("agent loop", () => {
     const turn = await runAgentTurn({ ...c, appName: "Cents" }, llm, "spend?");
     expect(llm.requests).toHaveLength(3);
     expect(llm.requests[2].messages.at(-1)).toMatchObject({ role: "user", content: expect.stringContaining("do not appear in your tool results: $2,500") });
-    expect(turn.reply.content).toBe("You spent $2,481.72 so far.");
+    expect(turn.reply.content).toBe(ensureBoldLead("You spent $2,481.72 so far."));
     expect(turn.reply.verification).toMatchObject({ status: "verified", retried: true });
     expect((await loadChat(db, c.sessionId)).map((m) => m.content).join(" ")).not.toContain("internal check");
   });
@@ -381,7 +382,7 @@ describe("agent loop", () => {
     ]);
     const turn = await runAgentTurn({ ...c, appName: "Cents" }, llm, "Just estimate next year's dining");
     expect(llm.requests).toHaveLength(2);
-    expect(turn.reply.content).toBe("Roughly $3,600.00 next year.");
+    expect(turn.reply.content).toBe(ensureBoldLead("Roughly $3,600.00 next year."));
     expect(turn.reply.verification).toMatchObject({ status: "partial", verified_count: 0, total_count: 1, retried: true });
     const rows = await db.select().from(auditLog).where(and(eq(auditLog.sessionId, c.sessionId), eq(auditLog.event, "reply_unverified")));
     expect(rows).toHaveLength(1);
@@ -395,7 +396,7 @@ describe("agent loop", () => {
       { content: "About $2,500, maybe $2,600.", toolCalls: [], usage: null },
     ]);
     const turn = await runAgentTurn({ ...c, appName: "Cents" }, llm, "spend?");
-    expect(turn.reply.content).toBe("You spent $2,481.72, about $2,500.");
+    expect(turn.reply.content).toBe(ensureBoldLead("You spent $2,481.72, about $2,500."));
     expect(turn.reply.verification).toMatchObject({ status: "partial", verified_count: 1, total_count: 2, retried: true });
   });
 

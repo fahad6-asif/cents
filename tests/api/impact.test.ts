@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { and, eq } from "drizzle-orm";
-import { IMPACT_MAX_TOOL_ITERATIONS, impactPrompt, impactProposalBlock, loadImpactTransactions } from "@/lib/agent/impact";
+import { IMPACT_MAX_TOOL_ITERATIONS, impactFacts, impactPrompt, impactProposalBlock, loadImpactTransactions } from "@/lib/agent/impact";
 import { runAgentTurn } from "@/lib/agent/loop";
 import { checkChatRateLimit } from "@/lib/agent/rate-limit";
 import type { LlmClient, LlmRequest, LlmResponse } from "@/lib/agent/types";
@@ -66,6 +66,44 @@ describe("impact note prompt", () => {
   });
 });
 
+describe("impact facts (server-computed before → after)", () => {
+  it("$120 Entertainment at seed: budget, net, free-to-spend, the rule-engine fix and stale count, exactly", async () => {
+    const id = await newSession();
+    const t = await custom(id, { type: "expense", category: "Entertainment", amountCents: 12_000, merchant: EVIL });
+    const txns = await loadImpactTransactions(db, id, [t.transaction.id]);
+    const { facts, keyFigures } = await impactFacts(db, id, txns, TODAY);
+    expect(keyFigures).toEqual(["Entertainment $73.50 → $193.50", "Net $918.28 → $798.28", "Free to spend $3,261.26 → $3,141.26"]);
+    expect(facts).toEqual([
+      "Entertainment budget (October): spent $73.50 → $193.50 of $150.00 (129% used, over by $43.50).",
+      "This month's net: $918.28 → $798.28.",
+      "Free to spend after bills and essential budgets (disposable funds): $3,261.26 → $3,141.26.",
+      "A one-click fix now waits for the user's approval (created by this transaction's checks): move $45.00 from Shopping to Entertainment, which covers the full $43.50 overage.",
+      "No pending proposal became stale.",
+    ]);
+    const prompt = impactPrompt(txns, facts);
+    expect(prompt).toContain("Facts computed by the server (exact; quote them, never recompute");
+    expect(prompt).not.toContain("Ignore");
+  });
+
+  it("an overrun with no rule-engine fix is named, and stale proposals are counted", async () => {
+    const id = await newSession();
+    await db
+      .insert(agentActions)
+      .values({ sessionId: id, type: "budget_adjustment", origin: "assistant", status: "pending", rationale: "Trim shopping.", changes: [{ category: "Shopping", month: "2026-10", old_limit_cents: 25_000, new_limit_cents: 10_000 }] });
+    const t = await custom(id, { type: "expense", category: "Shopping", amountCents: 78_000 });
+    const { facts } = await impactFacts(db, id, await loadImpactTransactions(db, id, [t.transaction.id]), TODAY);
+    expect(facts).toContain("Shopping is over budget with no one-click fix: plan_overrun_fix can plan one.");
+    expect(facts.at(-1)).toBe("Proposals made stale by this transaction: 1 (they can no longer be approved; ask for a new one).");
+  });
+
+  it("income has no budget line but still reports net and free to spend", async () => {
+    const id = await newSession();
+    const t = await custom(id, { type: "income", amountCents: 50_000 });
+    const { facts } = await impactFacts(db, id, await loadImpactTransactions(db, id, [t.transaction.id]), TODAY);
+    expect(facts.slice(0, 2)).toEqual(["This month's net: $918.28 → $1,418.28.", "Free to spend after bills and essential budgets (disposable funds): $3,261.26 → $3,761.26."]);
+  });
+});
+
 describe("impact note turn", () => {
   it("stores a hidden impact_request and an impact reply with receipts and verification, and counts as a chat message", async () => {
     const id = await newSession();
@@ -82,6 +120,23 @@ describe("impact note turn", () => {
     expect(chat.map((m) => m.kind)).toEqual(["impact_request", "impact"]);
     // Rate limit: the impact turn is one chat message.
     expect(await checkChatRateLimit(db, id, { perSessionPerHour: 1, globalPerDay: 10_000 })).toMatchObject({ ok: false });
+  });
+
+  it("the server's fact check is the first receipts step and grounds the reply's figures", async () => {
+    const id = await newSession();
+    const t = await custom(id, { type: "expense", category: "Entertainment", amountCents: 12_000 });
+    const txns = await loadImpactTransactions(db, id, [t.transaction.id]);
+    const { facts, keyFigures } = await impactFacts(db, id, txns, TODAY);
+    const llm = fakeLlm([{ content: "**Entertainment is now $43.50 over budget.** Net is $798.28 (was $918.28).", toolCalls: [], usage: null }]);
+    const turn = await runAgentTurn({ db, sessionId: id, epoch: 0, today: TODAY, appName: "Cents" }, llm, impactPrompt(txns, facts), {
+      maxToolIterations: IMPACT_MAX_TOOL_ITERATIONS,
+      impact: { blockProposals: null },
+      priorLogs: [{ toolName: "impact_facts", input: { transactions: 1 }, output: { facts, key_figures: keyFigures }, ok: true, durationMs: 12 }],
+    });
+    expect(turn.reply.trace[0]).toMatchObject({ tool: "impact_facts", label: "Re-checked the account after the new transaction", key_figures: keyFigures });
+    expect(turn.reply.verification).toMatchObject({ status: "verified", total_count: 3 });
+    expect(turn.reply.verification!.figures.every((f) => f.source_tool === "impact_facts")).toBe(true);
+    expect((await loadChat(db, id))[1].trace[0].tool).toBe("impact_facts");
   });
 
   it(`stops at ${IMPACT_MAX_TOOL_ITERATIONS} tool rounds and forces an answer`, async () => {

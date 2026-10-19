@@ -1,0 +1,432 @@
+{
+  "afford-900": {
+    "text": "**Yes, you can afford the $900.00 purchase.** You'd still have $2,361.26 in disposable funds afterward.\n\n**How that's worked out**\n- Balance: $5,842.13\n- Unpaid bills before next income (Sat 14 Nov): $1,660.99\n- Essential budgets still reserved this month: $919.88\n- Disposable funds now: $3,261.26\n\n**Bills counted**\n- Rent: $1,450.00 (Sun 1 Nov)\n- Electricity: $120.00 (Sun 25 Oct)\n- Internet: $45.00 (Tue 20 Oct)\n- Phone: $30.00 (Thu 22 Oct)\n- Streaming: $15.99 (Wed 28 Oct)",
+    "verification": {
+      "status": "verified",
+      "figures": [
+        {
+          "raw": "$900.00",
+          "kind": "usd",
+          "value": 90000,
+          "matched": true,
+          "source_tool": "check_affordability"
+        },
+        {
+          "raw": "$2,361.26",
+          "kind": "usd",
+          "value": 236126,
+          "matched": true,
+          "source_tool": "check_affordability"
+        },
+        {
+          "raw": "$5,842.13",
+          "kind": "usd",
+          "value": 584213,
+          "matched": true,
+          "source_tool": "check_affordability"
+        },
+        {
+          "raw": "$1,660.99",
+          "kind": "usd",
+          "value": 166099,
+          "matched": true,
+          "source_tool": "check_affordability"
+        },
+        {
+          "raw": "$919.88",
+          "kind": "usd",
+          "value": 91988,
+          "matched": true,
+          "source_tool": "check_affordability"
+        },
+        {
+          "raw": "$3,261.26",
+          "kind": "usd",
+          "value": 326126,
+          "matched": true,
+          "source_tool": "check_affordability"
+        },
+        {
+          "raw": "$1,450.00",
+          "kind": "usd",
+          "value": 145000,
+          "matched": true,
+          "source_tool": "check_affordability"
+        },
+        {
+          "raw": "$120.00",
+          "kind": "usd",
+          "value": 12000,
+          "matched": true,
+          "source_tool": "check_affordability"
+        },
+        {
+          "raw": "$45.00",
+          "kind": "usd",
+          "value": 4500,
+          "matched": true,
+          "source_tool": "check_affordability"
+        },
+        {
+          "raw": "$30.00",
+          "kind": "usd",
+          "value": 3000,
+          "matched": true,
+          "source_tool": "check_affordability"
+        },
+        {
+          "raw": "$15.99",
+          "kind": "usd",
+          "value": 1599,
+          "matched": true,
+          "source_tool": "check_affordability"
+        }
+      ],
+      "retried": false,
+      "all_matched": true,
+      "total_count": 11,
+      "verified_count": 11
+    },
+    "overflow": {
+      "desktop": 0,
+      "mobile": 0
+    }
+  },
+  "subscriptions": {
+    "text": "**You have 4 subscriptions costing $63.97/month.**\n\n- Gym membership: $35.00/mo (Health, outside the Subscriptions category)\n- Streaming plan: $15.99/mo\n- News app: $9.99/mo\n- Cloud storage: $2.99/mo\n\nThat's **$767.64/year**. Want me to suggest which to cut?",
+    "verification": {
+      "status": "verified",
+      "figures": [
+        {
+          "raw": "$63.97",
+          "kind": "usd",
+          "value": 6397,
+          "matched": true,
+          "source_tool": "find_recurring_charges"
+        },
+        {
+          "raw": "$35.00",
+          "kind": "usd",
+          "value": 3500,
+          "matched": true,
+          "source_tool": "find_recurring_charges"
+        },
+        {
+          "raw": "$15.99",
+          "kind": "usd",
+          "value": 1599,
+          "matched": true,
+          "source_tool": "find_recurring_charges"
+        },
+        {
+          "raw": "$9.99",
+          "kind": "usd",
+          "value": 999,
+          "matched": true,
+          "source_tool": "find_recurring_charges"
+        },
+        {
+          "raw": "$2.99",
+          "kind": "usd",
+          "value": 299,
+          "matched": true,
+          "source_tool": "find_recurring_charges"
+        },
+        {
+          "raw": "$767.64",
+          "kind": "usd",
+          "value": 76764,
+          "matched": true,
+          "source_tool": "find_recurring_charges"
+        }
+      ],
+      "retried": false,
+      "all_matched": true,
+      "total_count": 6,
+      "verified_count": 6
+    },
+    "overflow": {
+      "desktop": 0,
+      "mobile": 0
+    }
+  },
+  "plan-next-month": {
+    "text": "**I've proposed raising three November limits to match your actual spending, adding $190.00 in total.** The proposal is waiting for your approval in the app.\n\n- Groceries: spent over its limit in each of July, August and September, averaging $636.55.\n- Dining: over its limit every month, averaging $517.26.\n- Shopping: over in two of three months, averaging $363.59.\n\nHousing, Utilities, Transport, Subscriptions, Entertainment and Health stay at their current limits because they're fixed, on pace, or essential.",
+    "verification": {
+      "status": "verified",
+      "figures": [
+        {
+          "raw": "$190.00",
+          "kind": "usd",
+          "value": 19000,
+          "matched": true,
+          "source_tool": "get_category_history"
+        },
+        {
+          "raw": "$636.55",
+          "kind": "usd",
+          "value": 63655,
+          "matched": true,
+          "source_tool": "get_category_history"
+        },
+        {
+          "raw": "$517.26",
+          "kind": "usd",
+          "value": 51726,
+          "matched": true,
+          "source_tool": "get_category_history"
+        },
+        {
+          "raw": "$363.59",
+          "kind": "usd",
+          "value": 36359,
+          "matched": true,
+          "source_tool": "get_category_history"
+        }
+      ],
+      "retried": false,
+      "all_matched": true,
+      "total_count": 4,
+      "verified_count": 4
+    },
+    "overflow": {
+      "desktop": 0,
+      "mobile": 0
+    }
+  },
+  "compare-sep-aug": {
+    "text": "**September spending was $3,603.39, down $205.37 (5.4%) from August's $3,808.76.**\n\n| Category | Aug | Sep |\n|---|---|---|\n| Shopping | $527.02 | $213.46 |\n| Transport | $217.52 | $142.19 |\n| Entertainment | $80.61 | $153.35 |\n| Groceries | $605.95 | $653.84 |\n| Dining | $534.40 | $586.49 |\n\n- Biggest drop: Shopping, down $313.56 (59.5%)\n- Biggest rise: Entertainment, up $72.74 (90.2%)\n- Groceries and Dining also rose, by $47.89 and $52.09\n- Housing and Subscriptions were unchanged",
+    "verification": {
+      "status": "verified",
+      "figures": [
+        {
+          "raw": "$3,603.39",
+          "kind": "usd",
+          "value": 360339,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$205.37",
+          "kind": "usd",
+          "value": 20537,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$3,808.76",
+          "kind": "usd",
+          "value": 380876,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$527.02",
+          "kind": "usd",
+          "value": 52702,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$213.46",
+          "kind": "usd",
+          "value": 21346,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$217.52",
+          "kind": "usd",
+          "value": 21752,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$142.19",
+          "kind": "usd",
+          "value": 14219,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$80.61",
+          "kind": "usd",
+          "value": 8061,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$153.35",
+          "kind": "usd",
+          "value": 15335,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$605.95",
+          "kind": "usd",
+          "value": 60595,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$653.84",
+          "kind": "usd",
+          "value": 65384,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$534.40",
+          "kind": "usd",
+          "value": 53440,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$586.49",
+          "kind": "usd",
+          "value": 58649,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$313.56",
+          "kind": "usd",
+          "value": 31356,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$72.74",
+          "kind": "usd",
+          "value": 7274,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$47.89",
+          "kind": "usd",
+          "value": 4789,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "$52.09",
+          "kind": "usd",
+          "value": 5209,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "5.4%",
+          "kind": "pct",
+          "value": 5.4,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "59.5%",
+          "kind": "pct",
+          "value": 59.5,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        },
+        {
+          "raw": "90.2%",
+          "kind": "pct",
+          "value": 90.2,
+          "matched": true,
+          "source_tool": "compare_monthly_spending"
+        }
+      ],
+      "retried": false,
+      "all_matched": true,
+      "total_count": 20,
+      "verified_count": 20
+    },
+    "overflow": {
+      "desktop": 0,
+      "mobile": 0
+    }
+  },
+  "impact-note": {
+    "text": "**Entertainment is now over budget at $193.50 of $150.00 (129% used).**\n\n- Budget: $43.50 over this month\n- This month's net: $798.28 (was $918.28)\n- Free to spend after bills and essential budgets: $3,141.26 (was $3,261.26)\n- Alerts: the Entertainment overrun is the new alert\n- Proposals: none became stale\n\nA one-click fix is waiting for your approval: move $45.00 from Shopping to Entertainment, which covers the full $43.50 overage. Want me to walk through it?",
+    "verification": {
+      "status": "verified",
+      "figures": [
+        {
+          "raw": "$193.50",
+          "kind": "usd",
+          "value": 19350,
+          "matched": true,
+          "source_tool": "impact_facts"
+        },
+        {
+          "raw": "$150.00",
+          "kind": "usd",
+          "value": 15000,
+          "matched": true,
+          "source_tool": "impact_facts"
+        },
+        {
+          "raw": "$43.50",
+          "kind": "usd",
+          "value": 4350,
+          "matched": true,
+          "source_tool": "impact_facts"
+        },
+        {
+          "raw": "$798.28",
+          "kind": "usd",
+          "value": 79828,
+          "matched": true,
+          "source_tool": "impact_facts"
+        },
+        {
+          "raw": "$918.28",
+          "kind": "usd",
+          "value": 91828,
+          "matched": true,
+          "source_tool": "impact_facts"
+        },
+        {
+          "raw": "$3,141.26",
+          "kind": "usd",
+          "value": 314126,
+          "matched": true,
+          "source_tool": "impact_facts"
+        },
+        {
+          "raw": "$3,261.26",
+          "kind": "usd",
+          "value": 326126,
+          "matched": true,
+          "source_tool": "impact_facts"
+        },
+        {
+          "raw": "$45.00",
+          "kind": "usd",
+          "value": 4500,
+          "matched": true,
+          "source_tool": "impact_facts"
+        },
+        {
+          "raw": "129%",
+          "kind": "pct",
+          "value": 129,
+          "matched": true,
+          "source_tool": "impact_facts"
+        }
+      ],
+      "retried": false,
+      "all_matched": true,
+      "total_count": 9,
+      "verified_count": 9
+    },
+    "overflow": {
+      "desktop": 0,
+      "mobile": 0
+    }
+  }
+}

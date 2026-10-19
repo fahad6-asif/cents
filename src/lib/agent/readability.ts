@@ -47,6 +47,21 @@ function paragraphs(markdown: string): string[] {
   return out;
 }
 
+/**
+ * Shape-only fix (B2.1 rule 1): when the first line has no bold, bold its first sentence. Words and
+ * figures are untouched (the verifier strips Markdown, so it is unaffected).
+ */
+export function ensureBoldLead(markdown: string): string {
+  const lines = markdown.split("\n");
+  const i = lines.findIndex((l) => l.trim());
+  if (i < 0 || /\*\*[^*]+\*\*/.test(lines[i]) || LIST_ITEM.test(lines[i]) || TABLE_ROW.test(lines[i])) return markdown;
+  const line = lines[i].trim();
+  const m = /^(.+?[.!?])(\s+.*)?$/.exec(line);
+  const [lead, rest] = m ? [m[1], m[2] ?? ""] : [line, ""];
+  lines[i] = `**${lead}**${rest}`;
+  return lines.join("\n");
+}
+
 export function checkReadability(markdown: string): ReadabilityResult {
   const md = markdown.trim();
   const issues: ReadabilityIssue[] = [];

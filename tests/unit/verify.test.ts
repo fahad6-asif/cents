@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { correctionMessage, extractFigures, toVerification, verifyReply } from "@/lib/agent/verify";
+import { correctionMessage, extractFigures, stripMarkdown, toVerification, verifyReply } from "@/lib/agent/verify";
 
 const usd = (cents: number) => ({ cents, usd: `$${(cents / 100).toFixed(2)}` });
 
@@ -69,5 +69,35 @@ describe("verifyReply", () => {
   it("a reply with no figures has status none", () => {
     const r = verifyReply("I can't predict that.", outputs, "");
     expect(toVerification(r, false)).toMatchObject({ status: "none", total_count: 0, all_matched: true });
+  });
+});
+
+describe("verifyReply on formatted replies (B2)", () => {
+  const outputs = [
+    { tool: "check_affordability", output: { balance: { cents: 584_213, usd: "$5,842.13" }, bills_total: { cents: 166_099, usd: "$1,660.99" }, disposable_after_purchase: { cents: 236_126, usd: "$2,361.26" } } },
+    { tool: "get_upcoming_bills", output: { bills: [{ name: "Internet", amount: { cents: 4_500, usd: "$45.00" } }] } },
+    { tool: "compare_monthly_spending", output: { totals: { change_pct: -14.2 } } },
+  ];
+
+  it("matches figures inside bold, bullets and table cells, and keeps bullet dashes from reading as minus", () => {
+    const md = [
+      "**Yes, you can afford it.** You'd still have **$2,361.26** free after bills.",
+      "",
+      "- Balance: $5,842.13",
+      "- $1,660.99 in bills",
+      "",
+      "| Bill | Amount |",
+      "|---|---:|",
+      "| Internet | $45.00 |",
+      "",
+      "Spending is down **−14.2%**.",
+    ].join("\n");
+    const r = verifyReply(md, outputs, "Can I afford it?");
+    expect(r).toMatchObject({ all_matched: true, total_count: 5 });
+    expect(r.figures.find((f) => f.raw.includes("1,660.99"))!.value).toBe(166_099);
+  });
+
+  it("stripMarkdown removes syntax only", () => {
+    expect(stripMarkdown("- **Rent:** `$1,450.00`\n|a|b|\n|---|---|\n| x | $2.00 |")).toBe("Rent: $1,450.00\n a b \n \n  x   $2.00  ");
   });
 });

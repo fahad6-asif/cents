@@ -5,6 +5,7 @@ import { sql } from "drizzle-orm";
 import { chatMessages, toolCalls } from "@/lib/db/schema";
 import type { ChatMessageView, ChatTurnResponse } from "@/lib/chat-types";
 import { systemPrompt } from "./prompt";
+import { checkReadability, ensureBoldLead } from "./readability";
 import { buildTrace } from "./trace";
 import { TOOL_BY_NAME, executeTool, toolDefinitions, type ToolContext, type TurnState } from "./tools";
 import type { LlmClient, LlmMessage } from "./types";
@@ -20,7 +21,7 @@ export const PROPOSAL_NUDGE =
 const LISTS_LIMIT_CHANGES = /\$[\d,]+\.\d{2}\s*(→|->)\s*\$[\d,]+\.\d{2}/;
 const ASKS_FOR_BUDGET_CHANGE = /\b(budget|save|saving|cut|trim|plan|limit|rebalance|lower|reduce)/i;
 
-type ToolLog = { toolName: string; input: unknown; output: unknown; ok: boolean; durationMs: number };
+export type ToolLog = { toolName: string; input: unknown; output: unknown; ok: boolean; durationMs: number };
 
 /**
  * One assistant turn (plan 8.1): last 20 messages + system prompt + tools; execute tool calls
@@ -35,6 +36,8 @@ export type TurnOptions = {
    * impact. Proposals are allowed only when an overrun has no rule-engine fix (blockProposals is the reason otherwise).
    */
   impact?: { blockProposals: string | null };
+  /** Server-side steps done before the model runs (the impact note's fact check): logged, traced and verifiable like tool calls. */
+  priorLogs?: ToolLog[];
 };
 
 export async function runAgentTurn(
@@ -64,7 +67,7 @@ export async function runAgentTurn(
   ];
   const tools = toolDefinitions();
   const state: TurnState = { proposal: null, blockProposals: opts.impact?.blockProposals ?? null };
-  const logs: ToolLog[] = [];
+  const logs: ToolLog[] = [...(opts.priorLogs ?? [])];
   const usage = { promptTokens: 0, completionTokens: 0, cost: 0, calls: 0 };
   const perCall: { finish: string | null; completion: number; reasoning: number; text_chars: number; tool_calls: number }[] = [];
 
@@ -119,7 +122,7 @@ export async function runAgentTurn(
         // Never silently drop a reply: keep whichever attempt has fewer ungrounded figures.
         const unmatched = (r: VerifyResult) => r.total_count - r.verified_count;
         if (firstAttempt && unmatched(firstAttempt.check) < unmatched(check)) ({ text: candidate, check } = firstAttempt);
-        reply = candidate;
+        reply = ensureBoldLead(candidate);
         verification = toVerification(check, retried);
         break;
       }
@@ -189,6 +192,8 @@ export async function runAgentTurn(
       cost_usd: Math.round(usage.cost * 1e6) / 1e6,
       failed,
       proposal_id: state.proposal?.id ?? null,
+      // B2.3: logged only (no retry; the verifier owns the one retry). Issue kinds, never the text.
+      readability: failed ? null : readabilitySummary(reply!),
     });
     if (verification) {
       // Counts only, never the reply text.
@@ -214,4 +219,9 @@ export async function runAgentTurn(
     turnMs: r.turnMs ?? null,
   });
   return { user: view(saved.user), reply: view(saved.assistant), proposal: state.proposal, failed };
+}
+
+function readabilitySummary(reply: string) {
+  const r = checkReadability(reply);
+  return { ok: r.ok, issues: r.issues.map((i) => i.kind) };
 }
