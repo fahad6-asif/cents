@@ -2,6 +2,7 @@
 import { disposableFunds } from "@/lib/domain/affordability";
 import { analyzeBills } from "@/lib/domain/bills-analysis";
 import { budgetStatuses, type BudgetStatus } from "@/lib/domain/budgets";
+import { categoryHistory, paceLine } from "@/lib/domain/category-history";
 import { addMonths, dayOf, daysBetween, monthOf, nextIncomeDate } from "@/lib/domain/dates";
 import type { SessionData } from "@/lib/db/queries";
 
@@ -62,11 +63,16 @@ export function budgetsView(data: SessionData, today: string, which: "current" |
   const current = monthOf(today);
   const month = which === "current" ? current : addMonths(current, 1);
   const rows: BudgetStatus[] = budgetStatuses(data.budgets, data.txs, month, today);
+  // Pace and history only mean something for the month in progress.
+  const pace =
+    which === "current"
+      ? new Map(categoryHistory({ budgets: data.budgets, txs: data.txs, bills: data.bills, today }).categories.map((h) => [h.category, paceLine(h)]))
+      : new Map<string, ReturnType<typeof paceLine>>();
   const sum = (f: (r: BudgetStatus) => number) => rows.reduce((s, r) => s + f(r), 0);
   return {
     month,
     which,
-    rows: [...rows].sort((a, b) => b.utilization - a.utilization || a.category.localeCompare(b.category)),
+    rows: [...rows].sort((a, b) => b.utilization - a.utilization || a.category.localeCompare(b.category)).map((r) => ({ ...r, pace: pace.get(r.category) ?? null })),
     totals: { limitCents: sum((r) => r.limitCents), spentCents: sum((r) => r.spentCents), remainingCents: sum((r) => r.remainingCents) },
   };
 }

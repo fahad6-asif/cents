@@ -33,6 +33,7 @@ const ARGS: Record<string, unknown> = {
   find_recurring_charges: {},
   analyze_bills: { bill: "Electricity" },
   plan_overrun_fix: { category: "Dining", month: "2026-10" },
+  get_category_history: {},
   get_proposals: {},
   propose_budget_adjustment: { changes: [{ category: "Dining", month: "2026-11", new_limit_cents: 25_000 }], rationale: "Lower dining next month." },
 };

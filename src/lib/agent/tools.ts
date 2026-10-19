@@ -18,6 +18,7 @@ import { addDays, addMonths, dateLabel, dayOf, daysBetween, formatLoggedAt, mont
 import { formatUSD } from "@/lib/domain/money";
 import { validateChanges, type BudgetChange } from "@/lib/domain/proposals";
 import { analyzeBills } from "@/lib/domain/bills-analysis";
+import { categoryHistory } from "@/lib/domain/category-history";
 import { planOverrunFix, type OverrunFix } from "@/lib/domain/overrun-fix";
 import { findRecurringCharges } from "@/lib/domain/recurring";
 import { summarize } from "@/lib/domain/summary";
@@ -382,6 +383,54 @@ export const TOOLS = [
         })),
         propose_with: r.changes.map((c) => ({ category: c.category, month: c.month, new_limit_cents: c.new_limit_cents })),
         notes: r.notes,
+      };
+    },
+  }),
+
+  tool({
+    name: "get_category_history",
+    kind: "read",
+    description:
+      "Per budget category: spending in the last N full months (default 3) with the limit, the average, months over budget, this month's pace (pace_pct 100 = on pace, projected month end), and a deterministic suggested_next_limit for next month with its suggestion_reason (chronically_over, consistently_under, on_track, fixed, fixed_bills_due, essential_kept). Use it to plan next month's budget; propose_with lists exactly the changes to propose.",
+    schema: z.object({ category: Category.optional(), months: z.number().int().min(2).max(6).default(3) }).strict(),
+    async run(ctx, input) {
+      const data = await loadSessionData(ctx.db, ctx.sessionId);
+      const r = categoryHistory({ budgets: data.budgets, txs: data.txs, bills: data.bills, today: ctx.today, months: input.months, category: input.category });
+      const label = (mm: string) => `${monthName(mm)} ${mm.slice(0, 4)}`;
+      return {
+        months_covered: r.categories[0]?.months.map((x) => label(x.month)) ?? [],
+        next_month: r.categories[0] ? { value: r.categories[0].nextMonth, label: label(r.categories[0].nextMonth) } : null,
+        categories: r.categories.map((c) => ({
+          category: c.category,
+          fixed: c.fixed,
+          essential: c.essential,
+          months: c.months.map((x) => ({ month: label(x.month), spent: m(x.spentCents), limit: m(x.limitCents), over: x.over })),
+          limit_basis: c.limitBasis === "current_limit" ? "past months compared with this month's limit (no stored past budgets)" : "stored",
+          average_full_months: m(c.averageFullMonthsCents),
+          months_over_budget: c.monthsOverBudget,
+          current: {
+            month: label(c.current.month),
+            spent: m(c.current.spentCents),
+            limit: m(c.current.limitCents),
+            days_elapsed: c.current.daysElapsed,
+            days_in_month: c.current.daysInMonth,
+            pace_pct: c.current.pacePct,
+            projected_month_end: m(c.current.projectedMonthEndCents),
+            on_pace: c.current.onPace,
+          },
+          next_month_limit: m(c.nextLimitCents),
+          suggested_next_limit: m(c.suggestedNextLimitCents),
+          suggested_change: m(c.suggestedNextLimitCents - c.nextLimitCents),
+          suggestion_reason: c.suggestionReason,
+        })),
+        totals: {
+          current_limits_sum: m(r.totals.currentLimitsSumCents),
+          suggested_limits_sum: m(r.totals.suggestedLimitsSumCents),
+          difference: m(r.totals.differenceCents),
+        },
+        propose_with: r.categories
+          .filter((c) => c.suggestedNextLimitCents !== c.nextLimitCents)
+          .map((c) => ({ category: c.category, month: c.nextMonth, new_limit_cents: c.suggestedNextLimitCents })),
       };
     },
   }),

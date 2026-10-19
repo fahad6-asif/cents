@@ -76,6 +76,17 @@ export default async function BudgetsPage({ searchParams }: PageProps<"/budgets"
                   <div className="mt-[6px] h-1.5 rounded-full bg-muted-fill">
                     <div className={cn("h-1.5 rounded-full", tone)} style={{ width: `${Math.min(pct, 100)}%` }} />
                   </div>
+                  {b.pace && (
+                    <p data-testid="pace-line" className="tabular mt-1 text-[12px] text-text-muted">
+                      {b.pace.kind === "on_pace"
+                        ? "On pace"
+                        : b.pace.kind === "ahead"
+                          ? `Ahead of pace, projected ${formatUSD(b.pace.projectedCents!)}`
+                          : b.pace.kind === "history_over"
+                            ? `Over in ${b.pace.over} of last ${b.pace.of} months`
+                            : "Over budget"}
+                    </p>
+                  )}
                 </li>
               );
             })}

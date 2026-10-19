@@ -263,6 +263,23 @@
         "propose_budget_adjustment"
       ],
       "proposal": "required"
+    },
+    {
+      "id": "plan_next_month",
+      "question": "Plan next month’s budget",
+      "expect": [],
+      "tools_any": [
+        "get_category_history"
+      ],
+      "tools_all": [
+        "get_category_history",
+        "propose_budget_adjustment"
+      ],
+      "proposal": "required",
+      "proposal_matches_history": true,
+      "must_not_match": [
+        "Entertainment[^.]*(cut|lower|reduc|trim)"
+      ]
     }
   ]
 }

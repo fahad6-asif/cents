@@ -44,6 +44,7 @@ describe("tool registry", () => {
       "find_recurring_charges",
       "analyze_bills",
       "plan_overrun_fix",
+      "get_category_history",
       "get_proposals",
       "propose_budget_adjustment",
     ]);

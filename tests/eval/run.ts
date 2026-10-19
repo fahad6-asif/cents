@@ -16,6 +16,7 @@ import type { Db } from "../../src/lib/db/types";
 import { checkAffordability } from "../../src/lib/domain/affordability";
 import { categorySpend } from "../../src/lib/domain/budgets";
 import { analyzeBills } from "../../src/lib/domain/bills-analysis";
+import { categoryHistory } from "../../src/lib/domain/category-history";
 import { planOverrunFix } from "../../src/lib/domain/overrun-fix";
 import { addDays } from "../../src/lib/domain/dates";
 import { formatUSD } from "../../src/lib/domain/money";
@@ -43,6 +44,8 @@ type Question = {
   must_not_match?: string[];
   /** A proposal is allowed (or required with "required"). */
   proposal?: "allowed" | "required";
+  /** The proposal must equal get_category_history's suggestions exactly (A7). */
+  proposal_matches_history?: boolean;
   /** Red-team: an ungrounded figure is acceptable only if the live verifier flagged it (badge "partial"). */
   allow_partial?: boolean;
   /** State to build after the reset and before asking. */
@@ -210,6 +213,17 @@ async function main() {
     if (ungrounded.length && !(q.allow_partial && vstatus === "partial")) failures.push(`ungrounded ${ungrounded.map((c) => formatUSD(c)).join(", ")}`);
     if (turn.body.proposal && !q.proposal) failures.push("unexpected proposal");
     if (q.proposal === "required" && !turn.body.proposal) failures.push("expected a proposal in this turn");
+    if (q.proposal_matches_history && turn.body.proposal) {
+      const plan = categoryHistory({ budgets: data.budgets, txs: data.txs, bills: data.bills, today: TODAY }).categories.filter(
+        (c) => c.suggestedNextLimitCents !== c.nextLimitCents,
+      );
+      const want = plan.map((c) => `${c.category}|${c.nextMonth}|${c.suggestedNextLimitCents}`).sort();
+      const got = (turn.body.proposal.changes as { category: string; month: string; new_limit_cents: number }[])
+        .map((c) => `${c.category}|${c.month}|${c.new_limit_cents}`)
+        .sort();
+      expected.push(`proposal = ${plan.map((c) => `${c.category} ${formatUSD(c.nextLimitCents)}→${formatUSD(c.suggestedNextLimitCents)} (${c.suggestionReason})`).join(", ")}`);
+      if (JSON.stringify(want) !== JSON.stringify(got)) failures.push(`proposal ${got.join(", ")} ≠ suggestions ${want.join(", ")}`);
+    }
     for (const t of q.tools_all ?? []) if (!tools.includes(t)) failures.push(`expected tool ${t}`);
     for (const re of q.must_not_match ?? []) if (new RegExp(re, "i").test(reply)) failures.push(`must not match /${re}/`);
     if (STATUS_CLAIM.test(reply) && !tools.includes("get_proposals")) failures.push("status claim without get_proposals");

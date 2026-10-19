@@ -156,6 +156,7 @@ describe("every read tool is read-only (addendum §7)", () => {
     find_recurring_charges: { lookback_months: 6 },
     analyze_bills: { months: 6 },
     plan_overrun_fix: { category: "Dining", month: "2026-10" },
+    get_category_history: { months: 3 },
   };
   const TABLES = ["sessions", "accounts", "transactions", "budgets", "bills", "alerts", "agent_actions", "audit_log", "chat_messages", "tool_calls"];
   const counts = async () => {

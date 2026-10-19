@@ -97,6 +97,16 @@ const SPECS: Record<string, Spec> = {
         ? ["Not over budget"]
         : [`Over ${usd(o.overage)}`, `Covered now ${usd(o.covered_now)}`, `Carried ${usd(o.carried)}`, o.uncovered?.cents ? `Uncovered ${usd(o.uncovered)}` : null],
   },
+  get_category_history: {
+    label: (i) => `Reviewed ${i.months ?? 3} months of ${i.category ? String(i.category).slice(0, 40) : "category"} history`,
+    summarizeForTrace: (o) => [
+      `Limits ${usd(o.totals?.current_limits_sum)} → ${usd(o.totals?.suggested_limits_sum)}`,
+      ...(o.propose_with ?? []).slice(0, 3).map((p: Loose) => {
+        const c = (o.categories ?? []).find((x: Loose) => x.category === p.category);
+        return c ? `${c.category} ${usd(c.suggested_next_limit)}` : null;
+      }),
+    ],
+  },
   get_proposals: {
     label: () => "Checked your proposals",
     summarizeForTrace: (o) => [typeof o.counts?.pending === "number" ? `${o.counts.pending} pending` : null, typeof o.counts?.executed === "number" ? `${o.counts.executed} applied` : null],
