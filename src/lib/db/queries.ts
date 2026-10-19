@@ -12,16 +12,14 @@ export type SessionData = {
 
 /** Everything the domain functions need for one session, scoped by session_id. */
 export async function loadSessionData(db: DbOrTx, sessionId: string): Promise<SessionData> {
-  const [account] = await db.select().from(accounts).where(eq(accounts.sessionId, sessionId));
+  // Four independent reads in parallel: one round trip's latency instead of four (addendum A8).
+  const [[account], txRows, budgetRows, billRows] = await Promise.all([
+    db.select().from(accounts).where(eq(accounts.sessionId, sessionId)),
+    db.select().from(transactions).where(eq(transactions.sessionId, sessionId)).orderBy(asc(transactions.occurredAt), asc(transactions.id)),
+    db.select().from(budgets).where(eq(budgets.sessionId, sessionId)),
+    db.select().from(bills).where(eq(bills.sessionId, sessionId)).orderBy(asc(bills.dueDate)),
+  ]);
   if (!account) throw new Error("Session has no account");
-
-  const txRows = await db
-    .select()
-    .from(transactions)
-    .where(eq(transactions.sessionId, sessionId))
-    .orderBy(asc(transactions.occurredAt), asc(transactions.id));
-  const budgetRows = await db.select().from(budgets).where(eq(budgets.sessionId, sessionId));
-  const billRows = await db.select().from(bills).where(eq(bills.sessionId, sessionId)).orderBy(asc(bills.dueDate));
 
   return {
     account: {

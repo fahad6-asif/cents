@@ -8,7 +8,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { audit } from "@/lib/db/audit";
 import { toProposalView } from "@/lib/db/chat";
-import { loadSessionData } from "@/lib/db/queries";
+import { loadSessionData, type SessionData } from "@/lib/db/queries";
 import { agentActions, budgets } from "@/lib/db/schema";
 import type { Db } from "@/lib/db/types";
 import { checkAffordability } from "@/lib/domain/affordability";
@@ -24,7 +24,17 @@ import { findRecurringCharges } from "@/lib/domain/recurring";
 import { summarize } from "@/lib/domain/summary";
 import type { ProposalView } from "@/lib/chat-types";
 
-export type ToolContext = { db: Db; sessionId: string; epoch: number; today: string };
+export type ToolContext = {
+  db: Db;
+  sessionId: string;
+  epoch: number;
+  today: string;
+  /** Per-turn snapshot of the session's rows (A8). Read tools compute from it; writes still go to the DB. */
+  snapshot?: () => Promise<SessionData>;
+};
+
+/** The session's transactions, budgets and bills: the turn's snapshot when there is one. */
+const sessionData = (ctx: ToolContext) => (ctx.snapshot ? ctx.snapshot() : loadSessionData(ctx.db, ctx.sessionId));
 
 /** Money as both exact cents and a display string, so the model never has to format or compute. */
 const m = (cents: number) => ({ cents, usd: formatUSD(cents) });
@@ -56,7 +66,7 @@ export const TOOLS = [
       "Current balance, month-to-date income, spending (expenses only), transfers out, money in/out, net cash flow, balance change %, today's simulated date and the next income date.",
     schema: z.object({}).strict(),
     async run(ctx) {
-      const data = await loadSessionData(ctx.db, ctx.sessionId);
+      const data = await sessionData(ctx);
       const s = summarize(data.account.openingBalanceCents, data.txs, ctx.today);
       return {
         today: dateLabel(ctx.today),
@@ -92,7 +102,7 @@ export const TOOLS = [
       })
       .strict(),
     async run(ctx, input) {
-      const data = await loadSessionData(ctx.db, ctx.sessionId);
+      const data = await sessionData(ctx);
       const rows = data.txs
         .filter((t) => dayOf(t.occurredAt) <= ctx.today)
         .filter((t) => !input.month || monthOf(dayOf(t.occurredAt)) === input.month)
@@ -137,7 +147,7 @@ export const TOOLS = [
       .strict()
       .refine((v) => (v.month === undefined) !== (v.last_days === undefined), "provide exactly one of month or last_days"),
     async run(ctx, input) {
-      const data = await loadSessionData(ctx.db, ctx.sessionId);
+      const data = await sessionData(ctx);
       let from: string;
       let to: string;
       let totals: Map<string, number>;
@@ -168,7 +178,7 @@ export const TOOLS = [
       "Budget limits, spending, remaining and utilization per category for a month (YYYY-MM). States: ok, warning (80–100%), overrun (>100%).",
     schema: z.object({ month: Month }).strict(),
     async run(ctx, input) {
-      const data = await loadSessionData(ctx.db, ctx.sessionId);
+      const data = await sessionData(ctx);
       const rows = budgetStatuses(data.budgets, data.txs, input.month, ctx.today);
       if (!rows.length) return { month: input.month, budgets: [], note: "No budgets exist for this month." };
       const sum = (f: (r: (typeof rows)[number]) => number) => rows.reduce((a, r) => a + f(r), 0);
@@ -195,7 +205,7 @@ export const TOOLS = [
     description: "Unpaid bills due within the next N days (default 14, max 60), including any overdue, with a pre-computed total.",
     schema: z.object({ days: z.number().int().min(1).max(60).default(14) }).strict(),
     async run(ctx, input) {
-      const data = await loadSessionData(ctx.db, ctx.sessionId);
+      const data = await sessionData(ctx);
       const until = addDays(ctx.today, input.days);
       const rows = data.bills.filter((b) => b.status === "unpaid" && b.dueDate <= until);
       return {
@@ -219,7 +229,7 @@ export const TOOLS = [
     description: "Per-category expense totals for two months (YYYY-MM) with pre-computed changes (b − a) and totals.",
     schema: z.object({ month_a: Month, month_b: Month }).strict(),
     async run(ctx, input) {
-      const data = await loadSessionData(ctx.db, ctx.sessionId);
+      const data = await sessionData(ctx);
       const a = categorySpend(data.txs, input.month_a, ctx.today);
       const b = categorySpend(data.txs, input.month_b, ctx.today);
       const cats = [...new Set([...a.keys(), ...b.keys()])].sort();
@@ -248,7 +258,7 @@ export const TOOLS = [
       "Whether a one-off purchase is affordable: balance, unpaid bills due before the next income date, essential budget still needed this month, disposable funds, and the figures after the purchase.",
     schema: z.object({ amount_cents: z.number().int().min(1).max(100_000_000) }).strict(),
     async run(ctx, input) {
-      const data = await loadSessionData(ctx.db, ctx.sessionId);
+      const data = await sessionData(ctx);
       const r = checkAffordability(input.amount_cents, {
         openingBalanceCents: data.account.openingBalanceCents,
         txs: data.txs,
@@ -282,7 +292,7 @@ export const TOOLS = [
       "Detects recurring charges (subscriptions and bills) across ALL categories from the last N months (default 6): cadence, typical amount, MONTHLY equivalent, last and next charge, and pre-computed monthly/yearly totals. Use for any question about subscriptions or recurring costs.",
     schema: z.object({ lookback_months: z.number().int().min(3).max(12).default(6) }).strict(),
     async run(ctx, input) {
-      const data = await loadSessionData(ctx.db, ctx.sessionId);
+      const data = await sessionData(ctx);
       const r = findRecurringCharges(data.txs, data.bills, ctx.today, input.lookback_months);
       const row = (i: (typeof r.items)[number]) => ({
         data: { merchant: i.merchant },
@@ -321,7 +331,7 @@ export const TOOLS = [
       "Bill analysis: paid history, average, min/max, last paid, the upcoming amount and due date, how the upcoming (or last) amount compares with the average (delta and pct), trend (rising/falling/flat) and whether it is unusual (|pct| >= 15). Optional bill name; default all bills over the last 6 months.",
     schema: z.object({ bill: z.string().max(40).optional(), months: z.number().int().min(3).max(12).default(6) }).strict(),
     async run(ctx, input) {
-      const data = await loadSessionData(ctx.db, ctx.sessionId);
+      const data = await sessionData(ctx);
       const r = analyzeBills(data.bills, ctx.today, input.months, input.bill);
       if (input.bill && r.bills.length === 0) return { ok: false, error: `No bill named "${input.bill}".`, known_bills: [...new Set(data.bills.map((b) => b.name))] };
       return {
@@ -357,7 +367,7 @@ export const TOOLS = [
     schema: z.object({ category: Category, month: Month }).strict(),
     async run(ctx, input, state) {
       if (input.month !== monthOf(ctx.today)) return { ok: false, error: `Only the current month (${monthOf(ctx.today)}) can be fixed.` };
-      const data = await loadSessionData(ctx.db, ctx.sessionId);
+      const data = await sessionData(ctx);
       const r = planOverrunFix({ category: input.category, budgets: data.budgets, txs: data.txs, bills: data.bills, today: ctx.today });
       state.overrunFix = r;
       const label = (mm: string) => `${monthName(mm)} ${mm.slice(0, 4)}`;
@@ -391,10 +401,10 @@ export const TOOLS = [
     name: "get_category_history",
     kind: "read",
     description:
-      "Per budget category: spending in the last N full months (default 3) with the limit, the average, months over budget, this month's pace (pace_pct 100 = on pace, projected month end), and a deterministic suggested_next_limit for next month with its suggestion_reason (chronically_over, consistently_under, on_track, fixed, fixed_bills_due, essential_kept). Use it to plan next month's budget; propose_with lists exactly the changes to propose.",
+      "Per budget category: spending in the last N full months (default 3) with the limit, the average, months over budget, this month's pace (pace_pct 100 = on pace, projected month end), and a deterministic suggested_next_limit for next month with its suggestion_reason (chronically_over, consistently_under, on_track, fixed, fixed_bills_due, essential_kept). Call it ONCE without category to get every category. Use it to plan next month's budget; propose_with lists exactly the changes to propose.",
     schema: z.object({ category: Category.optional(), months: z.number().int().min(2).max(6).default(3) }).strict(),
     async run(ctx, input) {
-      const data = await loadSessionData(ctx.db, ctx.sessionId);
+      const data = await sessionData(ctx);
       const r = categoryHistory({ budgets: data.budgets, txs: data.txs, bills: data.bills, today: ctx.today, months: input.months, category: input.category });
       const label = (mm: string) => `${monthName(mm)} ${mm.slice(0, 4)}`;
       return {
@@ -447,16 +457,9 @@ export const TOOLS = [
       })
       .strict(),
     async run(ctx, input) {
-      const rows = await ctx.db
-        .select()
-        .from(agentActions)
-        .where(
-          input.status === "all"
-            ? eq(agentActions.sessionId, ctx.sessionId)
-            : and(eq(agentActions.sessionId, ctx.sessionId), eq(agentActions.status, input.status)),
-        )
-        .orderBy(desc(agentActions.createdAt));
-      const all = await ctx.db.select({ status: agentActions.status }).from(agentActions).where(eq(agentActions.sessionId, ctx.sessionId));
+      // One query: the counts and the filtered list come from the same rows.
+      const all = await ctx.db.select().from(agentActions).where(eq(agentActions.sessionId, ctx.sessionId)).orderBy(desc(agentActions.createdAt));
+      const rows = input.status === "all" ? all : all.filter((r) => r.status === input.status);
       const count = (st: string) => all.filter((r) => r.status === st).length;
       const when = (d: Date | null) => (d ? { iso: d.toISOString(), label: formatLoggedAt(d.toISOString()) } : null);
       return {

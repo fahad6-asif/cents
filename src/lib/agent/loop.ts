@@ -1,11 +1,12 @@
 import { audit } from "@/lib/db/audit";
 import { loadHistory } from "@/lib/db/chat";
+import { loadSessionData, type SessionData } from "@/lib/db/queries";
 import { sql } from "drizzle-orm";
 import { chatMessages, toolCalls } from "@/lib/db/schema";
 import type { ChatMessageView, ChatTurnResponse } from "@/lib/chat-types";
 import { systemPrompt } from "./prompt";
 import { buildTrace } from "./trace";
-import { executeTool, toolDefinitions, type ToolContext, type TurnState } from "./tools";
+import { TOOL_BY_NAME, executeTool, toolDefinitions, type ToolContext, type TurnState } from "./tools";
 import type { LlmClient, LlmMessage } from "./types";
 import { correctionMessage, toVerification, verifyReply, type Verification, type VerifyResult } from "./verify";
 
@@ -31,6 +32,17 @@ export async function runAgentTurn(
   message: string,
 ): Promise<ChatTurnResponse & { failed: boolean }> {
   const startedAt = Date.now();
+  // A8: start loading the session's rows now, so the read tools find them ready after the first model call.
+  let snap: Promise<SessionData> | null = loadSessionData(ctx.db, ctx.sessionId);
+  snap.catch(() => {}); // a failed prefetch surfaces (and is retried) when a tool asks for it
+  const snapshot = () => {
+    snap = (snap ?? loadSessionData(ctx.db, ctx.sessionId)).catch((err) => {
+      snap = null;
+      throw err;
+    });
+    return snap;
+  };
+  const toolCtx: ToolContext = { ...ctx, snapshot };
   const history = await loadHistory(ctx.db, ctx.sessionId, HISTORY_MESSAGES);
   const messages: LlmMessage[] = [
     { role: "system", content: systemPrompt(ctx.appName, ctx.today) },
@@ -102,10 +114,21 @@ export async function runAgentTurn(
         content: res.content,
         tool_calls: res.toolCalls.map((c) => ({ id: c.id, type: "function", function: { name: c.name, arguments: c.arguments } })),
       });
-      for (const call of res.toolCalls) {
+      // A8: read tools from one model response run in parallel; proposals run after them, one at a time.
+      // Results are logged and fed back in the order the model asked for them.
+      const timed = async (call: (typeof res.toolCalls)[number]) => {
         const started = Date.now();
-        const result = await executeTool(ctx, call.name, call.arguments, state);
-        logs.push({ toolName: call.name, input: result.input, output: result.output, ok: result.ok, durationMs: Date.now() - started });
+        const result = await executeTool(toolCtx, call.name, call.arguments, state);
+        return { call, result, durationMs: Date.now() - started };
+      };
+      const isRead = (name: string) => TOOL_BY_NAME.get(name)?.kind === "read";
+      const reads = await Promise.all(res.toolCalls.filter((c) => isRead(c.name)).map(timed));
+      const writes = [];
+      for (const call of res.toolCalls.filter((c) => !isRead(c.name))) writes.push(await timed(call));
+      const done = new Map([...reads, ...writes].map((r) => [r.call.id, r]));
+      for (const call of res.toolCalls) {
+        const { result, durationMs } = done.get(call.id)!;
+        logs.push({ toolName: call.name, input: result.input, output: result.output, ok: result.ok, durationMs });
         messages.push({ role: "tool", tool_call_id: call.id, content: JSON.stringify(result.output) });
       }
     }

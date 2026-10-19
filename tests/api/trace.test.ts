@@ -3,8 +3,9 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { runAgentTurn } from "@/lib/agent/loop";
 import { TOOLS, executeTool, type ToolContext } from "@/lib/agent/tools";
 import { TRACED_TOOLS, buildTrace } from "@/lib/agent/trace";
-import type { LlmClient, LlmResponse } from "@/lib/agent/types";
+import type { LlmClient, LlmRequest, LlmResponse } from "@/lib/agent/types";
 import { loadChat } from "@/lib/db/chat";
+import { loadSessionData } from "@/lib/db/queries";
 import { ensureSession } from "@/lib/db/sessions";
 import type { Db } from "@/lib/db/types";
 import { TODAY_FOR_TESTS, createTestDb } from "../helpers/db";
@@ -99,5 +100,49 @@ describe("receipts trace", () => {
     expect(reply.trace).toEqual(turn.reply.trace);
     expect(reply.turnMs).toBe(turn.reply.turnMs);
     expect(JSON.stringify(turn)).not.toContain(c.sessionId);
+  });
+});
+
+describe("speed (A8)", () => {
+  it("read tools compute from the turn's snapshot instead of querying the session's rows again", async () => {
+    const c = await ctx();
+    const real = await loadSessionData(db, c.sessionId);
+    let loads = 0;
+    // A snapshot whose balance differs from the DB proves where the figures came from.
+    const snapshot = async () => {
+      loads++;
+      return { ...real, account: { ...real.account, openingBalanceCents: real.account.openingBalanceCents + 100_00 } };
+    };
+    const fromSnap = await executeTool({ ...c, snapshot }, "get_account_summary", "{}", { proposal: null });
+    const fromDb = await executeTool(c, "get_account_summary", "{}", { proposal: null });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const bal = (r: { output: unknown }) => (r.output as any).balance.cents;
+    expect(bal(fromSnap) - bal(fromDb)).toBe(100_00);
+    for (const name of ["get_budget_status", "check_affordability", "find_recurring_charges"]) {
+      await executeTool({ ...c, snapshot }, name, JSON.stringify(ARGS[name]), { proposal: null });
+    }
+    expect(loads).toBe(4);
+  });
+
+  it("a mixed batch (reads in parallel, the proposal after) is logged and fed back in the model's order", async () => {
+    const c = await ctx();
+    const call = (name: string, args: unknown) => ({ id: randomUUID(), name, arguments: JSON.stringify(args) });
+    const batch = [
+      call("get_budget_status", { month: "2026-11" }),
+      call("propose_budget_adjustment", ARGS.propose_budget_adjustment),
+      call("get_account_summary", {}),
+      call("get_upcoming_bills", { days: 7 }),
+    ];
+    const requests: LlmRequest[] = [];
+    const script: LlmResponse[] = [
+      { content: null, toolCalls: batch, usage: null },
+      { content: "Proposed: Dining −$50.00 for November. Approve it in the app.", toolCalls: [], usage: null },
+    ];
+    const llm: LlmClient = { model: "fake", complete: async (req) => (requests.push(structuredClone(req)), script.shift()!) };
+    const turn = await runAgentTurn({ ...c, appName: "Cents" }, llm, "Lower dining next month to $250");
+    expect(turn.reply.trace.map((s) => s.tool)).toEqual(batch.map((b) => b.name));
+    const fed = requests[1].messages.filter((m) => m.role === "tool").map((m) => (m as { tool_call_id: string }).tool_call_id);
+    expect(fed).toEqual(batch.map((b) => b.id));
+    expect(turn.proposal).toMatchObject({ status: "pending", totalDeltaCents: -5_000 });
   });
 });
