@@ -11,13 +11,15 @@ async function mockTurn(page: Page, content: string, figures: ReturnType<typeof 
     const message = route.request().postDataJSON().message as string;
     await route.fulfill({
       json: {
-        user: { id: crypto.randomUUID(), role: "user", content: message, createdAt: now(), proposal: null, verification: null },
+        user: { id: crypto.randomUUID(), role: "user", content: message, createdAt: now(), proposal: null, verification: null, trace: [], turnMs: null },
         reply: {
           id: crypto.randomUUID(),
           role: "assistant",
           content,
           createdAt: now(),
           proposal: null,
+          trace: [],
+          turnMs: null,
           verification: {
             figures,
             verified_count: verified,
@@ -79,7 +81,7 @@ test.describe("live model", () => {
     const body = await (await turn).json();
     expect(body.reply.verification).toMatchObject({ status: "verified", all_matched: true });
     const badge = page.getByTestId("assistant-message").last().getByTestId("verification-badge");
-    await expect(badge).toHaveText(new RegExp(`✓ ${body.reply.verification.total_count} figures? checked against your account`));
+    await expect(badge).toHaveText(new RegExp(`✓ ${body.reply.verification.total_count} figures? checked`));
     await page.screenshot({ path: "docs/evidence/screens/addendum/a4-verified-live.png" });
     await page.reload();
     await expect(page.getByTestId("assistant-message").last().getByTestId("verification-badge")).toHaveAttribute("data-status", "verified");

@@ -43,6 +43,7 @@ describe("tool registry", () => {
       "check_affordability",
       "find_recurring_charges",
       "analyze_bills",
+      "plan_overrun_fix",
       "get_proposals",
       "propose_budget_adjustment",
     ]);

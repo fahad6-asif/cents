@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { DATA_CHANGED, emitDataChanged, postJson, type DataChangedDetail } from "@/lib/client-events";
 import { ChatPanel, askAssistant } from "@/components/chat/chat-panel";
 import type { ChatMessageView } from "@/lib/chat-types";
+import { DISCRETIONARY_CATEGORIES } from "@/lib/domain/categories";
+import { monthName } from "@/lib/domain/dates";
 import { formatUSD } from "@/lib/domain/money";
 import { decideProposal } from "@/lib/proposal-actions";
 import type { OverviewData, RangeKey, SeriesPoint, WorthALookView } from "@/lib/overview-types";
@@ -21,9 +23,15 @@ async function fetchOverview(range: RangeKey): Promise<OverviewData> {
   return res.json();
 }
 
-/** Question the assistant gets when "Ask assistant" is pressed on an alert without a proposal. */
+/** A discretionary overrun the rule engine couldn't fix with one move: the agent plans it (addendum A6). */
+function agentCanFix(top: WorthALookView["top"]): boolean {
+  return top.type === "budget_overrun" && (DISCRETIONARY_CATEGORIES as readonly string[]).includes(String(top.facts.category));
+}
+
+/** Question the assistant gets when the primary button is pressed on an alert without a proposal. */
 function questionFor(top: WorthALookView["top"]): string {
   const f = top.facts;
+  if (agentCanFix(top)) return `Fix my ${f.category} overrun for ${monthName(String(f.month))}.`;
   switch (top.type) {
     case "budget_warning":
     case "budget_overrun":
@@ -141,7 +149,7 @@ export function OverviewView({ initial, chat }: { initial: OverviewData; chat: C
         <div className="mt-6 md:mt-[27px]">
           <WorthALook
             body={proposal ? `${worth.top.body} Move ${formatUSD(proposal.amountCents)} from ${proposal.from} to cover it?` : worth.top.body}
-            primaryLabel={proposal ? `Move ${formatUSD(proposal.amountCents, { whole: true })} to ${proposal.to}` : "Ask assistant"}
+            primaryLabel={proposal ? `Move ${formatUSD(proposal.amountCents, { whole: true })} to ${proposal.to}` : agentCanFix(worth.top) ? "Let the agent fix it" : "Ask assistant"}
             moreCount={worth.moreCount}
             busy={worthBusy}
             onPrimary={onWorthPrimary}

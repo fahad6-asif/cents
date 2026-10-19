@@ -10,7 +10,7 @@ import { DATA_CHANGED } from "@/lib/client-events";
 import { cn } from "@/lib/utils";
 import { ProposalCard } from "./proposal-card";
 import { MessageContent } from "./message-content";
-import { VerificationBadge } from "./verification-badge";
+import { TurnReceipts } from "./turn-receipts";
 
 /** Other components ask the assistant by dispatching this event with the question text. */
 export const ASK_EVENT = "cents:ask";
@@ -44,7 +44,7 @@ export function ChatPanel({ initialMessages, variant = "card" }: Props) {
       setSending(true);
       setNotice(null);
       setDraft("");
-      const optimistic: ChatMessageView = { id: `tmp-${Date.now()}`, role: "user", content: message, createdAt: new Date().toISOString(), proposal: null, verification: null };
+      const optimistic: ChatMessageView = { id: `tmp-${Date.now()}`, role: "user", content: message, createdAt: new Date().toISOString(), proposal: null, verification: null, trace: [], turnMs: null };
       setMessages((m) => [...m, optimistic]);
       try {
         const res = await fetch("/api/chat", {
@@ -140,7 +140,7 @@ export function ChatPanel({ initialMessages, variant = "card" }: Props) {
                     <div className="flex min-w-0 flex-1 flex-col gap-3 text-[15px] leading-[22px] text-text">
                       <MessageContent text={msg.content} />
                       {msg.proposal && <ProposalCard key={`${msg.proposal.id}-${msg.proposal.status}`} proposal={msg.proposal} />}
-                      <VerificationBadge verification={msg.verification} />
+                      <TurnReceipts trace={msg.trace} verification={msg.verification} turnMs={msg.turnMs} />
                     </div>
                   </div>
                 ),

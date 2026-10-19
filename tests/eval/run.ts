@@ -16,6 +16,7 @@ import type { Db } from "../../src/lib/db/types";
 import { checkAffordability } from "../../src/lib/domain/affordability";
 import { categorySpend } from "../../src/lib/domain/budgets";
 import { analyzeBills } from "../../src/lib/domain/bills-analysis";
+import { planOverrunFix } from "../../src/lib/domain/overrun-fix";
 import { addDays } from "../../src/lib/domain/dates";
 import { formatUSD } from "../../src/lib/domain/money";
 import { findRecurringCharges } from "../../src/lib/domain/recurring";
@@ -81,6 +82,7 @@ function expectations(d: SessionData): Record<string, number | string> {
     sep_dining_total: categorySpend(d.txs, "2026-09").get("Dining") ?? 0,
     ...recurringExpectations(d),
     ...billExpectations(d),
+    ...overrunExpectations(d),
   };
 }
 
@@ -94,6 +96,12 @@ function billExpectations(d: SessionData): Record<string, number | string> {
   const e = analyzeBills(d.bills, TODAY, 6, "Electricity").bills[0];
   if (!e?.upcoming || e.averageCents === null || !e.vsAverage) return {};
   return { elec_upcoming: e.upcoming.amountCents, elec_avg: e.averageCents, elec_pct: Math.abs(e.vsAverage.pct) };
+}
+
+function overrunExpectations(d: SessionData): Record<string, number | string> {
+  const r = planOverrunFix({ category: "Shopping", budgets: d.budgets, txs: d.txs, bills: d.bills, today: TODAY });
+  if (!r.needed) return {};
+  return { fix_covered_now: r.coveredNowCents, fix_carried: r.carriedCents };
 }
 
 /** Percentages in text ("6.9%", "7 %", "+6.9 percent") → numbers. */

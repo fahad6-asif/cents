@@ -1,9 +1,10 @@
 import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import type { BudgetChange } from "@/lib/domain/proposals";
 import { classifyChanges } from "@/lib/domain/proposals";
-import type { ChatMessageView, ProposalView } from "@/lib/chat-types";
+import type { ChatMessageView, OverrunFixMeta, ProposalView } from "@/lib/chat-types";
 import type { Verification } from "@/lib/agent/verify";
-import { agentActions, auditLog, chatMessages } from "./schema";
+import { agentActions, auditLog, chatMessages, toolCalls } from "./schema";
+import { buildTrace, type ToolCallRow } from "@/lib/agent/trace";
 import type { DbOrTx } from "./types";
 
 const HISTORY_LIMIT = 50;
@@ -33,6 +34,7 @@ export function toProposalView(r: typeof agentActions.$inferSelect): ProposalVie
     decidedAt: r.decidedAt?.toISOString() ?? null,
     executedAt: r.executedAt?.toISOString() ?? null,
     result: (r.result as Record<string, unknown> | null) ?? null,
+    overrunFix: ((r.meta as { overrun_fix?: OverrunFixMeta } | null)?.overrun_fix as OverrunFixMeta | undefined) ?? null,
   };
 }
 
@@ -51,6 +53,16 @@ export async function loadChat(db: DbOrTx, sessionId: string): Promise<ChatMessa
     sessionId,
     rows.flatMap((r) => (r.actionId ? [r.actionId] : [])),
   );
+  const assistantIds = rows.filter((r) => r.role === "assistant").map((r) => r.id);
+  const calls = assistantIds.length
+    ? await db
+        .select()
+        .from(toolCalls)
+        .where(and(eq(toolCalls.sessionId, sessionId), inArray(toolCalls.messageId, assistantIds)))
+        .orderBy(toolCalls.createdAt)
+    : [];
+  const byMessage = new Map<string, ToolCallRow[]>();
+  for (const c of calls) byMessage.set(c.messageId!, [...(byMessage.get(c.messageId!) ?? []), c]);
   return rows.map((r) => ({
     id: r.id,
     role: r.role,
@@ -58,6 +70,8 @@ export async function loadChat(db: DbOrTx, sessionId: string): Promise<ChatMessa
     createdAt: r.createdAt.toISOString(),
     proposal: r.actionId ? (proposals.get(r.actionId) ?? null) : null,
     verification: (r.verification as Verification | null) ?? null,
+    trace: r.role === "assistant" ? buildTrace(byMessage.get(r.id) ?? []) : [],
+    turnMs: r.turnMs ?? null,
   }));
 }
 

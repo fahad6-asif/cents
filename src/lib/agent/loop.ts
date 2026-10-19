@@ -1,8 +1,10 @@
 import { audit } from "@/lib/db/audit";
 import { loadHistory } from "@/lib/db/chat";
+import { sql } from "drizzle-orm";
 import { chatMessages, toolCalls } from "@/lib/db/schema";
 import type { ChatMessageView, ChatTurnResponse } from "@/lib/chat-types";
 import { systemPrompt } from "./prompt";
+import { buildTrace } from "./trace";
 import { executeTool, toolDefinitions, type ToolContext, type TurnState } from "./tools";
 import type { LlmClient, LlmMessage } from "./types";
 import { correctionMessage, toVerification, verifyReply, type Verification, type VerifyResult } from "./verify";
@@ -28,6 +30,7 @@ export async function runAgentTurn(
   llm: LlmClient,
   message: string,
 ): Promise<ChatTurnResponse & { failed: boolean }> {
+  const startedAt = Date.now();
   const history = await loadHistory(ctx.db, ctx.sessionId, HISTORY_MESSAGES);
   const messages: LlmMessage[] = [
     { role: "system", content: systemPrompt(ctx.appName, ctx.today) },
@@ -114,6 +117,7 @@ export async function runAgentTurn(
   }
   if (!failed && !verification) verification = toVerification(verifyReply(reply!, outputs(), message), retried);
 
+  const turnMs = Date.now() - startedAt;
   const saved = await ctx.db.transaction(async (tx) => {
     const [user] = await tx.insert(chatMessages).values({ sessionId: ctx.sessionId, role: "user", content: message }).returning();
     const [assistant] = await tx
@@ -124,11 +128,13 @@ export async function runAgentTurn(
         content: reply!,
         actionId: state.proposal?.id ?? null,
         verification,
+        turnMs,
         createdAt: new Date(user.createdAt.getTime() + 1),
       })
       .returning();
     if (logs.length) {
-      await tx.insert(toolCalls).values(logs.map((l) => ({ sessionId: ctx.sessionId, messageId: assistant.id, ...l })));
+      // clock_timestamp() per row keeps the calls in the order they ran (the receipts panel lists them).
+      await tx.insert(toolCalls).values(logs.map((l) => ({ sessionId: ctx.sessionId, messageId: assistant.id, ...l, createdAt: sql`clock_timestamp()` })));
     }
     await audit(tx, ctx.sessionId, ctx.epoch, "chat_message", {
       message_id: assistant.id,
@@ -162,6 +168,8 @@ export async function runAgentTurn(
     createdAt: r.createdAt.toISOString(),
     proposal: r.actionId && state.proposal?.id === r.actionId ? state.proposal : null,
     verification: (r.verification as Verification | null) ?? null,
+    trace: r.role === "assistant" ? buildTrace(logs) : [],
+    turnMs: r.turnMs ?? null,
   });
   return { user: view(saved.user), reply: view(saved.assistant), proposal: state.proposal, failed };
 }

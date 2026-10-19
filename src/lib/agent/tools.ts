@@ -18,6 +18,7 @@ import { addDays, addMonths, dateLabel, dayOf, daysBetween, formatLoggedAt, mont
 import { formatUSD } from "@/lib/domain/money";
 import { validateChanges, type BudgetChange } from "@/lib/domain/proposals";
 import { analyzeBills } from "@/lib/domain/bills-analysis";
+import { planOverrunFix, type OverrunFix } from "@/lib/domain/overrun-fix";
 import { findRecurringCharges } from "@/lib/domain/recurring";
 import { summarize } from "@/lib/domain/summary";
 import type { ProposalView } from "@/lib/chat-types";
@@ -40,7 +41,7 @@ type Tool<S extends z.ZodType = z.ZodType> = {
 };
 
 /** Mutable per-turn state the loop reads after tools run. */
-export type TurnState = { proposal: ProposalView | null };
+export type TurnState = { proposal: ProposalView | null; overrunFix?: OverrunFix | null };
 
 function tool<S extends z.ZodType>(t: Tool<S>): Tool<S> {
   return t;
@@ -348,6 +349,44 @@ export const TOOLS = [
   }),
 
   tool({
+    name: "plan_overrun_fix",
+    kind: "read",
+    description:
+      "For a category over budget THIS month: computes (writes nothing) a ready-to-propose change set that covers the overage from discretionary budgets with room now and carries the rest to next month's limit for the same category. Returns needed, overage, covered_now, carried, uncovered, changes, sources and notes. If needed is true, pass changes to propose_budget_adjustment exactly as returned.",
+    schema: z.object({ category: Category, month: Month }).strict(),
+    async run(ctx, input, state) {
+      if (input.month !== monthOf(ctx.today)) return { ok: false, error: `Only the current month (${monthOf(ctx.today)}) can be fixed.` };
+      const data = await loadSessionData(ctx.db, ctx.sessionId);
+      const r = planOverrunFix({ category: input.category, budgets: data.budgets, txs: data.txs, bills: data.bills, today: ctx.today });
+      state.overrunFix = r;
+      const label = (mm: string) => `${monthName(mm)} ${mm.slice(0, 4)}`;
+      return {
+        needed: r.needed,
+        category: r.category,
+        month: { value: r.month, label: label(r.month) },
+        next_month: { value: r.nextMonth, label: label(r.nextMonth) },
+        overspent: m(r.overspentCents),
+        overage: m(r.overageCents),
+        covered_now: m(r.coveredNowCents),
+        carried: m(r.carriedCents),
+        uncovered: m(r.uncoveredCents),
+        net_change_across_both_months: m(r.netChangeCents),
+        sources: r.sources.map((s) => ({ category: s.category, room: m(s.roomCents), taken: m(s.takenCents) })),
+        changes: r.changes.map((c) => ({
+          category: c.category,
+          month: c.month,
+          month_label: label(c.month),
+          old_limit: m(c.old_limit_cents),
+          new_limit: m(c.new_limit_cents),
+          delta: m(c.new_limit_cents - c.old_limit_cents),
+        })),
+        propose_with: r.changes.map((c) => ({ category: c.category, month: c.month, new_limit_cents: c.new_limit_cents })),
+        notes: r.notes,
+      };
+    },
+  }),
+
+  tool({
     name: "get_proposals",
     kind: "read",
     description:
@@ -442,7 +481,7 @@ export const TOOLS = [
 
       const [row] = await ctx.db
         .insert(agentActions)
-        .values({ sessionId: ctx.sessionId, type: "budget_adjustment", changes, rationale: input.rationale, origin: "assistant", status: "pending" })
+        .values({ sessionId: ctx.sessionId, type: "budget_adjustment", changes, rationale: input.rationale, origin: "assistant", status: "pending", meta: overrunMeta(state.overrunFix, changes) })
         .returning();
       await audit(ctx.db, ctx.sessionId, ctx.epoch, "action_proposed", { action_id: row.id, origin: "assistant", changes });
       const view = toProposalView(row);
@@ -465,6 +504,25 @@ export const TOOLS = [
     },
   }),
 ] as const;
+
+/** The overrun-fix split, attached only when the proposal is exactly the plan computed this turn. */
+function overrunMeta(fix: OverrunFix | null | undefined, changes: readonly BudgetChange[]) {
+  if (!fix?.needed || fix.changes.length !== changes.length) return null;
+  const key = (c: BudgetChange) => `${c.category}|${c.month}|${c.old_limit_cents}|${c.new_limit_cents}`;
+  const planned = new Set(fix.changes.map(key));
+  if (!changes.every((c) => planned.has(key(c)))) return null;
+  return {
+    overrun_fix: {
+      category: fix.category,
+      month: fix.month,
+      next_month: fix.nextMonth,
+      overage_cents: fix.overageCents,
+      covered_now_cents: fix.coveredNowCents,
+      carried_cents: fix.carriedCents,
+      uncovered_cents: fix.uncoveredCents,
+    },
+  };
+}
 
 export type ToolName = (typeof TOOLS)[number]["name"];
 export const TOOL_BY_NAME = new Map<string, Tool>(TOOLS.map((t) => [t.name, t as unknown as Tool]));

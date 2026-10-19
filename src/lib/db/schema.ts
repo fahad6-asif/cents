@@ -105,6 +105,8 @@ export const agentActions = pgTable(
       enum: ["pending", "approved", "rejected", "executed", "failed", "stale"],
     }).notNull(),
     result: jsonb("result"),
+    /** Server-computed context shown on the card, e.g. the overrun-fix split (addendum A6). Never model-written. */
+    meta: jsonb("meta"),
     createdAt: createdAt(),
     decidedAt: timestamp("decided_at", { withTimezone: true }),
     executedAt: timestamp("executed_at", { withTimezone: true }),
@@ -165,6 +167,8 @@ export const chatMessages = pgTable(
     actionId: uuid("action_id"),
     /** Grounding check of an assistant reply's $ and % figures (addendum A4). */
     verification: jsonb("verification"),
+    /** Wall-clock time of the assistant turn, for the receipts line (addendum A5). */
+    turnMs: integer("turn_ms"),
     createdAt: createdAt(),
   },
   (t) => [index("chat_messages_session_idx").on(t.sessionId, t.createdAt)],

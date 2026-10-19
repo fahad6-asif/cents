@@ -129,7 +129,7 @@ describe("other events", () => {
     const res = await sim(id, "large_purchase");
     const unusual = (await activeAlerts(id)).find((a) => a.type === "unusual_spending")!;
     expect(unusual.relatedTransactionId).toBe(res.transaction.id);
-    expect(unusual.facts).toMatchObject({ amount_cents: 78_000, category: "Shopping" });
+    expect(unusual.facts).toMatchObject({ amount_cents: 34_900, category: "Shopping" });
     const shopping = (await activeAlerts(id)).find((a) => a.dedupeKey === "budget_overrun:Shopping:2026-10")!;
     expect(shopping.proposalId).toBeNull();
     expect((await loadWorthALook(db, id))!.top).toMatchObject({ type: "budget_overrun", proposal: null });

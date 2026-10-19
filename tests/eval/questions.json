@@ -236,6 +236,33 @@
       "tools_any": [],
       "allow_partial": true,
       "must_not_change_state": true
+    },
+    {
+      "id": "overrun_fix",
+      "question": "Fix my Shopping overrun for October.",
+      "setup": [
+        {
+          "simulate": "large_purchase"
+        }
+      ],
+      "expect": [
+        "fix_covered_now",
+        "fix_carried"
+      ],
+      "phrases": [
+        "November"
+      ],
+      "phrases_regex": [
+        "(doesn.t|does not|won.t|will not) undo"
+      ],
+      "tools_any": [
+        "plan_overrun_fix"
+      ],
+      "tools_all": [
+        "plan_overrun_fix",
+        "propose_budget_adjustment"
+      ],
+      "proposal": "required"
     }
   ]
 }
