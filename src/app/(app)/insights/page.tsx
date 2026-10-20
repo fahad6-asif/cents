@@ -8,8 +8,8 @@ import { loadAuditLog } from "@/lib/db/activity";
 import { listAlerts, type AlertRow } from "@/lib/db/alerts-view";
 import { getDb } from "@/lib/db/client";
 import { factLabels } from "@/lib/alert-labels";
+import { EVENT_TONE, describeEvent, eventLabel } from "@/lib/audit-labels";
 import { formatLoggedAt } from "@/lib/domain/dates";
-import { formatUSD } from "@/lib/domain/money";
 import { currentSession } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
@@ -21,57 +21,6 @@ const ALERT_META: Record<string, { icon: LucideIcon; label: string; tone: string
   budget_warning: { icon: Gauge, label: "Budget warning", tone: "text-warning bg-warning-fill" },
   upcoming_bill: { icon: CalendarClock, label: "Upcoming bill", tone: "text-brand bg-brand/10" },
 };
-
-const EVENT_LABEL: Record<string, string> = {
-  session_created: "Demo account created",
-  transaction_simulated: "Transaction simulated",
-  alert_created: "Alert raised",
-  alert_resolved: "Alert resolved",
-  alert_dismissed: "Alert dismissed",
-  action_proposed: "Change proposed",
-  action_approved: "Change approved",
-  action_executed: "Change executed",
-  action_rejected: "Change rejected",
-  action_blocked: "Action blocked",
-  demo_reset: "Demo reset",
-  chat_message: "Assistant answered",
-  chat_cleared: "Chat cleared",
-  chat_rate_limited: "Chat rate-limited",
-};
-
-const EVENT_TONE: Record<string, string> = {
-  action_executed: "bg-brand",
-  action_approved: "bg-brand",
-  action_rejected: "bg-text-muted",
-  action_blocked: "bg-danger",
-  alert_created: "bg-warning",
-  demo_reset: "bg-ink-bar",
-};
-
-function describe(event: string, d: Record<string, unknown>): string {
-  const money = (v: unknown) => (typeof v === "number" ? formatUSD(v) : "");
-  switch (event) {
-    case "transaction_simulated":
-      return `${d.merchant} ${money(d.amount_cents)} (${d.category})`;
-    case "alert_created":
-    case "alert_resolved":
-    case "alert_dismissed":
-      // Older entries have no title: fall back to the key without its id.
-      return typeof d.title === "string" ? d.title : String(d.dedupe_key ?? d.type ?? "").split(":").filter((part) => !/^[0-9a-f-]{36}$/.test(part)).join(" · ").replace(/_/g, " ");
-    case "action_proposed":
-    case "action_executed": {
-      const changes = (d.changes as { category: string; old_limit_cents: number; new_limit_cents: number }[] | undefined) ?? [];
-      return changes.map((c) => `${c.category} ${money(c.old_limit_cents)} → ${money(c.new_limit_cents)}`).join(", ") + (d.origin ? ` · by ${d.origin}` : "");
-    }
-    case "action_blocked":
-      return `${d.attempted ?? "approve"} refused: ${d.reason}`;
-    case "chat_message":
-      return Array.isArray(d.tools) && d.tools.length ? `tools: ${(d.tools as string[]).join(", ")}` : "no tools";
-    default:
-      return "";
-  }
-}
-
 
 function AlertCard({ alert, actions }: { alert: AlertRow; actions?: boolean }) {
   const meta = ALERT_META[alert.type] ?? ALERT_META.budget_warning;
@@ -154,15 +103,15 @@ export default async function InsightsPage() {
           <ol className="mt-3" data-testid="action-log">
             {audit.map((e) => (
               <li key={e.id} className="relative flex gap-3 pb-3 pl-1">
-                <span className={cn("mt-1.5 size-2 shrink-0 rounded-full", EVENT_TONE[e.event] ?? "bg-line")} aria-hidden />
+                <span className={cn("mt-1.5 size-2 shrink-0 rounded-full", EVENT_TONE[e.event as keyof typeof EVENT_TONE] ?? "bg-line")} aria-hidden />
                 <div className="min-w-0 flex-1 text-[13px]">
                   <div className="flex items-baseline justify-between gap-2">
                     <span className="font-medium text-text" data-event={e.event}>
-                      {EVENT_LABEL[e.event] ?? e.event}
+                      {eventLabel(e.event)}
                     </span>
                     <span className="tabular shrink-0 text-[12px] text-text-muted">{formatLoggedAt(e.createdAt)}</span>
                   </div>
-                  {describe(e.event, e.details) && <p className="truncate text-text-muted">{describe(e.event, e.details)}</p>}
+                  {describeEvent(e.event, e.details) && <p className="truncate text-text-muted">{describeEvent(e.event, e.details)}</p>}
                   {e.event === "demo_reset" && <p className="text-[12px] text-text-muted">Epoch {e.epoch} starts</p>}
                 </div>
               </li>
