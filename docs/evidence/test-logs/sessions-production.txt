@@ -1,0 +1,17 @@
+# Session isolation, reset and database row-level security on PRODUCTION
+# Run: 2026-10-20T05:03:35Z | commit d717e78 | target: https://cents-iota.vercel.app
+# Command: npx tsx scripts/verify-sessions-live.mts https://cents-iota.vercel.app
+
+PASS  two visitors get two different session cookies
+      A: tx=653/46411 budgets=18/778000 bills=61/5 
+      B: tx=653/46411 budgets=18/778000 bills=61/5
+PASS  both sessions seeded identically
+PASS  change in A is visible in A
+PASS  B is unchanged after A changed
+PASS  POST /api/reset → 200 epoch 1
+PASS  reset restores A to the exact seed state
+PASS  audit log kept across reset (session_created, alert_created, alert_created, alert_created, demo_reset, alert_created, alert_created, alert_created)
+PASS  invalid cookie → a new session is issued (no existing session touched)
+PASS  B still unchanged after all of the above
+PASS  RLS enabled on all 10 tables
+PASS  no RLS policies exist (nothing readable by non-owner roles)

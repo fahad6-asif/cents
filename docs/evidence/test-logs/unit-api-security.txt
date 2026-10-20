@@ -1,0 +1,295 @@
+# Unit, API and security tests (Vitest on PGlite, real migrations)
+# Run: 2026-10-20T04:59:14Z | commit d717e78 | target: local, in-process Postgres
+# Command: npx vitest run --reporter=verbose
+
+
+ RUN  v5.0.5 C:/Users/hp/Documents/FinAI Pilot
+
+ ✓ tests/api/overview.test.ts > overview payload > matches the domain functions on the seed data 1515ms
+ ✓ tests/api/overview.test.ts > overview payload > uses one net figure for 'ahead', the balance delta and Cash flow → Net 764ms
+ ✓ tests/api/sessions.test.ts > sessions > clones the full seed for a new session 1175ms
+ ✓ tests/api/overview.test.ts > overview payload > returns the 1W series (8 points) 718ms
+ ✓ tests/api/sessions.test.ts > sessions > does not re-seed an existing session 839ms
+ ✓ tests/api/overview.test.ts > overview payload > returns the 1M series (31 points) 851ms
+ ✓ tests/api/overview.test.ts > overview payload > returns the 3M series (91 points) 639ms
+ ✓ tests/api/sessions.test.ts > sessions > isolates sessions: changing A leaves B untouched 1707ms
+ ✓ tests/api/actions.test.ts > approve (atomic approve + execute) > applies only the listed budgets, marks executed, logs, and resolves the overrun 1821ms
+ ✓ tests/api/engine.test.ts > alert engine at seed state > has the Dining warning and two upcoming bills active, with no proposals 1016ms
+ ✓ tests/api/overview.test.ts > overview payload > returns the 1Y series (366 points) 686ms
+ ✓ tests/api/sessions.test.ts > sessions > enforces one transaction per (session, idempotency key) 624ms
+ ✓ tests/api/engine.test.ts > alert engine at seed state > re-running checks creates no duplicates 792ms
+ ✓ tests/api/overview.test.ts > overview payload > lists the 5 most recent transactions and flags simulated ones 802ms
+ ✓ tests/api/actions.test.ts > approve (atomic approve + execute) > approving again is blocked (409 path), logged, and changes nothing 1123ms
+ ✓ tests/api/engine.test.ts > simulate restaurant > resolves the warning, raises an overrun and proposes moving $25 from Shopping 967ms
+ ✓ tests/api/sessions.test.ts > sessions > reset restores the exact seed state, bumps the epoch and keeps the audit log 1504ms
+ ✓ tests/api/actions.test.ts > approve (atomic approve + execute) > marks the proposal stale when the stored limit changed since it was proposed 878ms
+ ✓ tests/api/agent.test.ts > tool registry > exposes exactly the plan + addendum tools and no approve/execute/delete/SQL tool 78ms
+ ✓ tests/api/agent.test.ts > tool registry > rejects bad JSON, unknown tools and invalid arguments without throwing 833ms
+ ✓ tests/security/security.test.ts > 1–3. approval endpoint guards > 1. nonexistent or foreign action → not found 1863ms
+ ✓ tests/api/engine.test.ts > simulate restaurant > a second restaurant re-sizes the fix: old proposal stale, new one for $85 971ms
+ ✓ tests/api/actions.test.ts > approve (atomic approve + execute) > fails a proposal whose month is no longer current or next 732ms
+ ✓ tests/api/agent.test.ts > read tools return the deterministic figures > get_account_summary 663ms
+ ✓ tests/api/sessions.test.ts > sessions > refuses to reset an unknown session 20ms
+ ✓ tests/api/custom-txn.test.ts > POST /api/simulate body (custom union) > accepts a preset with or without kind (backward compatible), and valid custom bodies 54ms
+ ✓ tests/api/custom-txn.test.ts > POST /api/simulate body (custom union) > rejects amount 0 with 400 1ms
+ ✓ tests/api/custom-txn.test.ts > POST /api/simulate body (custom union) > rejects negative amount with 400 1ms
+ ✓ tests/api/custom-txn.test.ts > POST /api/simulate body (custom union) > rejects amount over $10,000 with 400 0ms
+ ✓ tests/api/custom-txn.test.ts > POST /api/simulate body (custom union) > rejects non-integer amount with 400 3ms
+ ✓ tests/api/custom-txn.test.ts > POST /api/simulate body (custom union) > rejects string amount with 400 0ms
+ ✓ tests/api/custom-txn.test.ts > POST /api/simulate body (custom union) > rejects Savings category with 400 0ms
+ ✓ tests/api/custom-txn.test.ts > POST /api/simulate body (custom union) > rejects Income as an expense category with 400 0ms
+ ✓ tests/api/custom-txn.test.ts > POST /api/simulate body (custom union) > rejects unknown category with 400 3ms
+ ✓ tests/api/custom-txn.test.ts > POST /api/simulate body (custom union) > rejects missing category for an expense with 400 1ms
+ ✓ tests/api/custom-txn.test.ts > POST /api/simulate body (custom union) > rejects merchant over 40 chars with 400 1ms
+ ✓ tests/api/custom-txn.test.ts > POST /api/simulate body (custom union) > rejects extra field with 400 0ms
+ ✓ tests/api/custom-txn.test.ts > POST /api/simulate body (custom union) > rejects unknown type with 400 1ms
+ ✓ tests/api/custom-txn.test.ts > POST /api/simulate body (custom union) > rejects bad idempotency key with 400 7ms
+ ✓ tests/api/custom-txn.test.ts > POST /api/simulate body (custom union) > refuses the long injection phrase from the spec outright (56 chars > 40) 1ms
+ ✓ tests/api/custom-txn.test.ts > POST /api/simulate body (custom union) > rejects a category on income and an unknown preset 4ms
+ ✓ tests/api/custom-txn.test.ts > POST /api/simulate body (custom union) > normalizes merchant text (control chars, whitespace) but keeps its words 1ms
+ ✓ tests/api/custom-txn.test.ts > POST /api/simulate body (custom union) > parses the dialog's amount text to integer cents 5ms
+ ✓ tests/api/custom-txn.test.ts > custom transactions in the engine > stores every category as a negative expense with origin custom, and the default merchant name 2274ms
+ ✓ tests/api/engine.test.ts > idempotency > the same key twice creates exactly one transaction 579ms
+ ✓ tests/api/agent.test.ts > read tools return the deterministic figures > get_transactions wraps merchant text in a data field (incl. the injection record) 504ms
+ ✓ tests/api/actions.test.ts > approve (atomic approve + execute) > cannot approve another session's proposal (not found) and logs the attempt 998ms
+ ✓ tests/security/security.test.ts > 1–3. approval endpoint guards > 2. a rejected action cannot be executed 652ms
+ ✓ tests/api/custom-txn.test.ts > custom transactions in the engine > stores income as positive in the Income category 564ms
+ ✓ tests/api/engine.test.ts > idempotency > two different clicks create two transactions 534ms
+ ✓ tests/api/agent.test.ts > read tools return the deterministic figures > get_spending_by_category for a month and for the last 7 days 518ms
+ ✓ tests/api/actions.test.ts > approve (atomic approve + execute) > applies an assistant proposal for next month 496ms
+ ✓ tests/security/security.test.ts > 1–3. approval endpoint guards > 3. duplicate approval is blocked and never applies twice 729ms
+ ✓ tests/api/custom-txn.test.ts > custom transactions in the engine > presets keep working and are stored with origin preset 558ms
+ ✓ tests/api/engine.test.ts > other events > large_purchase raises unusual spending (and a Shopping overrun with no possible proposal) 494ms
+ ✓ tests/api/agent.test.ts > read tools return the deterministic figures > get_budget_status, get_upcoming_bills, compare_monthly_spending, check_affordability 629ms
+ ✓ tests/api/actions.test.ts > reject > marks rejected, logs it, and leaves budgets byte-identical 611ms
+ ✓ tests/security/security.test.ts > 5. invalid proposals are rejected by the tool and by the approval endpoint > tool rejects unknown category 456ms
+ ✓ tests/api/custom-txn.test.ts > custom transactions in the engine > is idempotent: same key → one row, two keys → two rows 636ms
+ ✓ tests/api/engine.test.ts > other events > electricity marks the Electricity bill paid and removes its upcoming-bill alert 561ms
+ ✓ tests/api/agent.test.ts > find_recurring_charges > returns the monthly subscription total, includes Gym (Health), and wraps merchants as data 479ms
+ ✓ tests/security/security.test.ts > 5. invalid proposals are rejected by the tool and by the approval endpoint > tool rejects negative limit 360ms
+ ✓ tests/api/actions.test.ts > reject > a rejected proposal can be neither approved nor rejected again 562ms
+ ✓ tests/api/engine.test.ts > other events > electricity at seed state (bill 10 days out) just marks the bill paid 434ms
+ ✓ tests/security/security.test.ts > 5. invalid proposals are rejected by the tool and by the approval endpoint > tool rejects over $10,000 306ms
+ ✓ tests/api/agent.test.ts > get_proposals > reports live statuses and counts, with the rationale wrapped as data 427ms
+ ✓ tests/api/engine.test.ts > other events > groceries adds no alerts 361ms
+ ✓ tests/security/security.test.ts > 5. invalid proposals are rejected by the tool and by the approval endpoint > tool rejects month outside current/next 309ms
+ ✓ tests/api/actions.test.ts > reject > cannot reject another session's proposal 764ms
+ ✓ tests/api/engine.test.ts > other events > subscription adds no alerts 410ms
+ ✓ tests/api/agent.test.ts > get_proposals > never shows another session's proposals 714ms
+ ✓ tests/security/security.test.ts > 5. invalid proposals are rejected by the tool and by the approval endpoint > approval re-validates a tampered proposal with unknown category and applies nothing 628ms
+ ✓ tests/api/engine.test.ts > other events > salary adds no alerts 477ms
+ ✓ tests/api/agent.test.ts > propose_budget_adjustment > creates a pending proposal with server-filled old limits and changes no budget 405ms
+ ✓ tests/security/security.test.ts > 5. invalid proposals are rejected by the tool and by the approval endpoint > approval re-validates a tampered proposal with negative limit and applies nothing 531ms
+ ✓ tests/api/engine.test.ts > Not now (dismiss) > dismisses the alert, rejects its proposal, logs both, and does not resurrect it 749ms
+ ✓ tests/api/agent.test.ts > propose_budget_adjustment > enforces target_savings_cents server-side and reports the exact gap 429ms
+ ✓ tests/api/agent.test.ts > propose_budget_adjustment > rejects unknown category and creates nothing 477ms
+ ✓ tests/security/security.test.ts > 5. invalid proposals are rejected by the tool and by the approval endpoint > approval re-validates a tampered proposal with over $10,000 and applies nothing 788ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > budget alerts > creates a warning at 88% with deterministic facts and a dedupe key 5ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > budget alerts > upgrades to an overrun above 100% (and no warning) 0ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > budget alerts > ignores other months and spending after today 0ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > upcoming bill alerts > fires for unpaid bills due today through 7 days out (inclusive) 1ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > unusual spending > fires when > 3× the 90-day median and > $50 3ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > unusual spending > does not fire at exactly 3× the median 0ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > unusual spending > does not fire at $50 or less even when far above the median 0ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > unusual spending > needs prior history in the 90-day window 0ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > unusual spending > only looks at this month's expenses up to today 0ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > unusual spending > computes medians for odd, even and empty sets 0ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > evaluateAlerts > orders by severity: overrun > unusual > warning > upcoming bill 1ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > disposable funds and affordability > subtracts bills due by the next income date and the essential reserve, without double counting 16ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > disposable funds and affordability > floors an overspent essential category's reserve at zero 0ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > disposable funds and affordability > is affordable exactly at the disposable amount, not one cent above 1ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > disposable funds and affordability > rejects invalid amounts 2ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > overrun reallocation > moves the overage rounded up to $5 from the non-essential category with the most room 1ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > overrun reallocation > rounds odd overages up to the next $5 0ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > overrun reallocation > never takes from essential categories, and returns null when nothing can cover 0ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > overrun reallocation > returns null when there is no overage 0ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > overrun reallocation > works from real budget statuses 0ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > proposal validation > accepts a valid current- or next-month change 1ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > proposal validation > rejects unknown categories, other months, out-of-range or fractional limits 1ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > proposal validation > accepts the boundaries $0 and $10,000 0ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > proposal validation > rejects no-ops, duplicates, empty and missing budgets 1ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > proposal validation > marks a proposal stale when the stored limit changed 0ms
+ ✓ tests/unit/alerts-affordability-proposals.test.ts > proposal validation > classifies net effect 0ms
+ ✓ tests/api/agent.test.ts > propose_budget_adjustment > rejects month outside current/next and creates nothing 376ms
+ ✓ tests/api/engine.test.ts > Not now (dismiss) > refuses to dismiss twice, or another session's alert 799ms
+ ✓ tests/api/custom-txn.test.ts > custom transactions in the engine > allows 30 custom transactions per hour; the next is rate limited and logged 3305ms
+ ✓ tests/security/security.test.ts > 5. invalid proposals are rejected by the tool and by the approval endpoint > approval re-validates a tampered proposal with month outside current/next and applies nothing 599ms
+ ✓ tests/api/agent.test.ts > propose_budget_adjustment > rejects negative limit and creates nothing 401ms
+ ✓ tests/api/custom-txn.test.ts > custom transactions in the engine > audits origin, category and amount, but only the merchant's length 480ms
+ ✓ tests/security/security.test.ts > 5. invalid proposals are rejected by the tool and by the approval endpoint > the tool cannot set a status, origin or old limit (strict schema) 328ms
+ ✓ tests/api/agent.test.ts > propose_budget_adjustment > rejects over $10,000 and creates nothing 330ms
+ ✓ tests/api/custom-txn.test.ts > custom transactions in the engine > a custom Utilities expense never marks a bill paid (auto-pay is preset-only) 598ms
+ ✓ tests/security/security.test.ts > 6–7. the assistant has no way to approve or apply > exposes no approve/execute/delete/SQL tool and only one non-read tool 34ms
+ ✓ tests/security/security.test.ts > 6–7. the assistant has no way to approve or apply > merchant text reaches the model only as data, and the prompt says data is not instructions 574ms
+ ✓ tests/api/agent.test.ts > propose_budget_adjustment > rejects past month and creates nothing 480ms
+ ✓ tests/api/engine.test.ts > reset > returns alerts, proposals and data to the seed state 1554ms
+ ✓ tests/api/agent.test.ts > agent loop > runs tools, feeds results back, stores the turn and logs every tool call 778ms
+ ✓ tests/api/custom-txn.test.ts > re-evaluation after a custom transaction > custom $60 Dining gives the same alert outcome as the restaurant preset (overrun + Move $25) 1478ms
+ ✓ tests/api/agent.test.ts > agent loop > sends the last messages as context on the next turn 753ms
+ ✓ tests/api/custom-txn.test.ts > re-evaluation after a custom transaction > custom $780 Shopping raises both a budget overrun and unusual spending 408ms
+ ✓ tests/api/agent.test.ts > agent loop > caps tool iterations at 6, then forces a text answer 420ms
+ ✓ tests/unit/seed-scenarios.test.ts > seed state > has a Dining warning and the two bills due within 7 days, nothing else 20ms
+ ✓ tests/unit/seed-scenarios.test.ts > seed state > keeps 'ahead this month', the balance delta and Net identical 1ms
+ ✓ tests/unit/seed-scenarios.test.ts > seed state > can afford $900 but not $4,000 3ms
+ ✓ tests/unit/seed-scenarios.test.ts > simulated events > restaurant: Dining $325/$300 overrun (not unusual), $25 from Shopping 5ms
+ ✓ tests/unit/seed-scenarios.test.ts > simulated events > large purchase: unusual spending alert (plus a Shopping overrun no category can cover) 2ms
+ ✓ tests/unit/seed-scenarios.test.ts > simulated events > groceries triggers no new budget or unusual alert 4ms
+ ✓ tests/unit/seed-scenarios.test.ts > simulated events > subscription triggers no new budget or unusual alert 1ms
+ ✓ tests/unit/seed-scenarios.test.ts > simulated events > electricity triggers no new budget or unusual alert 1ms
+ ✓ tests/unit/seed-scenarios.test.ts > simulated events > salary triggers no new budget or unusual alert 1ms
+ ✓ tests/api/agent.test.ts > agent loop > attaches a proposal created during the turn to the reply 437ms
+ ✓ tests/api/custom-txn.test.ts > re-evaluation after a custom transaction > a pending proposal that now lowers a limit below what's spent goes stale at once, logged as action_stale 466ms
+ ✓ tests/security/security.test.ts > every read tool is read-only (addendum §7) > runs each read tool and leaves every table's row count unchanged 2285ms
+ ✓ tests/api/trace.test.ts > receipts trace > has a friendly label and summary for every registered tool 22ms
+ ✓ tests/api/trace.test.ts > receipts trace > summarizes every tool's real output with ≤ 4 key figures and no IDs 1190ms
+ ✓ tests/api/agent.test.ts > agent loop > nudges once when a reply lists limit changes without a proposal 357ms
+ ✓ tests/api/custom-txn.test.ts > re-evaluation after a custom transaction > an overrun-fix proposal goes stale when spending in one of its sources changes the plan 558ms
+ ✓ tests/security/security.test.ts > 9. rate limits survive reset and clearing the chat > blocks after N turns per hour and stays blocked after reset/clear 790ms
+ ✓ tests/api/trace.test.ts > receipts trace > the $900 affordability row reads as the user would say it 383ms
+ ✓ tests/api/agent.test.ts > agent loop > does not nudge comparisons that use 'from $X to $Y' or arrows outside budget requests 351ms
+ ✓ tests/api/custom-txn.test.ts > re-evaluation after a custom transaction > keeps the custom merchant under data in tool outputs, verbatim, even when it reads like an instruction 436ms
+ ✓ tests/api/trace.test.ts > receipts trace > labels inputs (months, windows) and shows failed calls without figures 5ms
+ ✓ tests/api/trace.test.ts > receipts trace > the turn response and the reloaded thread carry the same trace, in call order 498ms
+ ✓ tests/api/agent.test.ts > agent loop > keeps the original answer if the reminder produces no proposal 368ms
+ ✓ tests/api/agent.test.ts > agent loop > does not nudge plain answers 398ms
+ ✓ tests/unit/seed.test.ts > seed generator > is deterministic (identical hash on repeated runs) 10ms
+ ✓ tests/unit/seed.test.ts > seed generator > stores every amount as integer cents 8ms
+ ✓ tests/unit/seed.test.ts > seed generator > covers Nov 1 2025 → Oct 15 2026 and nothing after SIM_TODAY 0ms
+ ✓ tests/unit/seed.test.ts > seed generator > ends Oct 15 with a balance of $5,000–$6,500 and never dips below $500 0ms
+ ✓ tests/unit/seed.test.ts > seed generator > pays a $6,400 salary on the 14th of every month 1ms
+ ✓ tests/unit/seed.test.ts > seed generator > has Dining at exactly $265.00 of $300 in October (88%) 1ms
+ ✓ tests/unit/seed.test.ts > seed generator > has Shopping around $95 of $250 in October 0ms
+ ✓ tests/unit/seed.test.ts > seed generator > keeps every other category between 30% and 70% (Housing: under 80%) 0ms
+ ✓ tests/unit/seed.test.ts > seed generator > has October and November budgets with identical limits 1ms
+ ✓ tests/unit/seed.test.ts > seed generator > has the five upcoming unpaid bills from the plan 1ms
+ ✓ tests/unit/seed.test.ts > seed generator > marks every earlier bill paid, each with a matching payment transaction 2ms
+ ✓ tests/unit/seed.test.ts > seed generator > puts the prompt-injection record in September as a $4.50 Dining expense 0ms
+ ✓ tests/api/trace.test.ts > speed (A8) > read tools compute from the turn's snapshot instead of querying the session's rows again 457ms
+ ✓ tests/security/security.test.ts > 10. session isolation at the engine level > one session cannot dismiss, approve, reject or read another session's records 836ms
+ ✓ tests/api/custom-txn.test.ts > re-evaluation after a custom transaction > session isolation: a custom transaction in A never appears in B 771ms
+ ✓ tests/api/agent.test.ts > agent loop > verifies a grounded reply, stores the check and audits counts only 390ms
+ ✓ tests/api/trace.test.ts > speed (A8) > a mixed batch (reads in parallel, the proposal after) is logged and fed back in the model's order 383ms
+ ✓ tests/security/security.test.ts > 10. session isolation at the engine level > idempotency keys are scoped per session (a key from A cannot replay or block B) 569ms
+ ✓ tests/api/impact.test.ts > impact note prompt > is fixed and server-formatted, and never contains merchant text 638ms
+ ✓ tests/api/agent.test.ts > agent loop > retries once when a figure is ungrounded, and the grounded rewrite is verified 288ms
+ ✓ tests/security/security.test.ts > abuse caps > refuses to create sessions beyond the hourly cap (nothing seeded) 197ms
+ ✓ tests/api/agent.test.ts > agent loop > returns a still-ungrounded reply marked partial (never dropped) and audits reply_unverified 307ms
+ ✓ tests/security/security.test.ts > abuse caps > caps simulated transactions at 100 per session (replays still work) 281ms
+ ✓ tests/api/agent.test.ts > agent loop > keeps the first attempt when the rewrite is worse 299ms
+ ✓ tests/security/security.test.ts > audit log is append-only in app code > no source file updates audit_log, and only session cleanup deletes old orphan rows 226ms
+stderr | tests/api/agent.test.ts > agent loop > falls back to a friendly reply when the model call fails
+agent turn failed upstream 500
+
+ ✓ tests/api/impact.test.ts > impact note prompt > only uses this session's custom transactions (presets and other sessions are ignored) 694ms
+ ✓ tests/api/agent.test.ts > agent loop > falls back to a friendly reply when the model call fails 353ms
+ ✓ tests/api/impact.test.ts > impact facts (server-computed before → after) > $120 Entertainment at seed: budget, net, free-to-spend, the rule-engine fix and stale count, exactly 268ms
+ ✓ tests/api/agent.test.ts > rate limit > blocks after N turns per session and when the global daily cap is hit 394ms
+ ✓ tests/api/impact.test.ts > impact facts (server-computed before → after) > an overrun with no rule-engine fix is named, and stale proposals are counted 283ms
+ ✓ tests/api/impact.test.ts > impact facts (server-computed before → after) > income has no budget line but still reports net and free to spend 245ms
+ ✓ tests/api/impact.test.ts > impact note turn > stores a hidden impact_request and an impact reply with receipts and verification, and counts as a chat message 300ms
+ ✓ tests/api/impact.test.ts > impact note turn > the server's fact check is the first receipts step and grounds the reply's figures 313ms
+ ✓ tests/api/impact.test.ts > impact note turn > stops at 4 tool rounds and forces an answer 236ms
+ ✓ tests/api/impact.test.ts > impact note turn > refuses a proposal when the rule engine already has the fix (or nothing is over) 250ms
+ ✓ tests/api/impact.test.ts > impact note turn > allows a proposal when an overrun has no rule-engine fix (custom $780 Shopping) 235ms
+ ✓ tests/api/impact.test.ts > impact note turn > an injection-shaped merchant reaches the model only inside data, and nothing gets approved 240ms
+ ✓ tests/unit/verify.test.ts > extractFigures > handles commas, no decimals, $0.00, unicode and ascii minus, and percentages 3ms
+ ✓ tests/unit/verify.test.ts > extractFigures > counts a figure once however often it is mentioned 1ms
+ ✓ tests/unit/verify.test.ts > extractFigures > reads '12 percent' and ignores plain numbers and dates 0ms
+ ✓ tests/unit/verify.test.ts > verifyReply > matches figures from nested outputs (cents keys, usd strings, pct keys) and names the tool 1ms
+ ✓ tests/unit/verify.test.ts > verifyReply > is sign-insensitive, accepts ±$0.01 and ±0.1 percentage points, and reads raw ratios 1ms
+ ✓ tests/unit/verify.test.ts > verifyReply > allows figures from the user's own message, with or without a $ sign 0ms
+ ✓ tests/unit/verify.test.ts > verifyReply > flags an invented figure and an off-by-more-than-rounding percent 2ms
+ ✓ tests/unit/verify.test.ts > verifyReply > a whole-number percent matches its rounded source, a decimal one must be within 0.1 0ms
+ ✓ tests/unit/verify.test.ts > verifyReply > a reply with no figures has status none 0ms
+ ✓ tests/unit/verify.test.ts > verifyReply on formatted replies (B2) > matches figures inside bold, bullets and table cells, and keeps bullet dashes from reading as minus 1ms
+ ✓ tests/unit/verify.test.ts > verifyReply on formatted replies (B2) > stripMarkdown removes syntax only 0ms
+ ✓ tests/unit/recurring.test.ts > findRecurringCharges on the seed > finds exactly the merchants an independent month-by-month check finds 7ms
+ ✓ tests/unit/recurring.test.ts > findRecurringCharges on the seed > classifies subscriptions vs bills and totals the monthly cost 4ms
+ ✓ tests/unit/recurring.test.ts > findRecurringCharges on the seed > is deterministic and keeps the injection record out (it never recurs) 3ms
+ ✓ tests/unit/recurring.test.ts > findRecurringCharges rules > excludes a merchant whose amounts drift ~12% 0ms
+ ✓ tests/unit/recurring.test.ts > findRecurringCharges rules > ignores a one-off purchase at a recurring merchant 0ms
+ ✓ tests/unit/recurring.test.ts > findRecurringCharges rules > detects a weekly charge and converts it to a monthly equivalent 1ms
+ ✓ tests/unit/recurring.test.ts > findRecurringCharges rules > needs at least 3 charges and ignores income and savings 0ms
+ ✓ tests/unit/recurring.test.ts > findRecurringCharges rules > normalizes merchant names (case, digits, #, trailing reference codes) 0ms
+ ✓ tests/unit/overrun-fix.test.ts > planOverrunFix > large purchase: Shopping over, covered from Entertainment now and carried to November, net $0 12ms
+ ✓ tests/unit/overrun-fix.test.ts > planOverrunFix > restaurant: agrees with the rule engine's single move ($25 from Shopping) 2ms
+ ✓ tests/unit/overrun-fix.test.ts > planOverrunFix > an overrun too big for sources + carry leaves an honest uncovered amount 1ms
+ ✓ tests/unit/overrun-fix.test.ts > planOverrunFix > only touches discretionary sources under 80%, skipping ones with upcoming bills eating their room 1ms
+ ✓ tests/unit/overrun-fix.test.ts > planOverrunFix > returns needed: false when the category is within budget 0ms
+ ✓ tests/unit/overrun-fix.test.ts > planOverrunFix > never rebalances an essential category, but reports the overrun 0ms
+ ✓ tests/unit/overrun-fix.test.ts > planOverrunFix > carries nothing when next month has no budget for the category 1ms
+ ✓ tests/unit/overrun-fix.test.ts > planOverrunFix > (f) is deterministic 1ms
+ ✓ tests/unit/bills-analysis.test.ts > analyzeBills > computes history (newest first), average, min/max, trend and vs-average 60ms
+ ✓ tests/unit/bills-analysis.test.ts > analyzeBills > flags unusual at exactly 15% but not at 14.99% 1ms
+ ✓ tests/unit/bills-analysis.test.ts > analyzeBills > treats ±5% as a flat trend, and compares the last paid bill when nothing is upcoming 1ms
+ ✓ tests/unit/bills-analysis.test.ts > analyzeBills > handles a bill with no paid history 1ms
+ ✓ tests/unit/bills-analysis.test.ts > analyzeBills > filters to one bill by name and totals bills due before the next income 13ms
+ ✓ tests/unit/summary-budgets.test.ts > balance > is opening balance + all amounts up to and including the day 21ms
+ ✓ tests/unit/summary-budgets.test.ts > month-to-date totals > counts only this month up to today 1ms
+ ✓ tests/unit/summary-budgets.test.ts > month-to-date totals > treats transfers as money out but not spending 0ms
+ ✓ tests/unit/summary-budgets.test.ts > month-to-date totals > net equals the month's balance change 1ms
+ ✓ tests/unit/summary-budgets.test.ts > month-to-date totals > respects the month boundary at midnight UTC 0ms
+ ✓ tests/unit/summary-budgets.test.ts > month-to-date totals > can be negative 1ms
+ ✓ tests/unit/summary-budgets.test.ts > month-to-date totals > ignores positive non-income rows for income but counts them as money in 1ms
+ ✓ tests/unit/summary-budgets.test.ts > balance change % > is net ÷ start-of-month balance × 100, rounded to 1 decimal 1ms
+ ✓ tests/unit/summary-budgets.test.ts > balance change % > is null when the start balance is not positive 0ms
+ ✓ tests/unit/summary-budgets.test.ts > balance change % > summarize ties balance, start balance and change together 10ms
+ ✓ tests/unit/summary-budgets.test.ts > balance series > 1W has 8 daily points ending at today's balance 6ms
+ ✓ tests/unit/summary-budgets.test.ts > balance series > 1M has 31 daily points ending at today's balance 1ms
+ ✓ tests/unit/summary-budgets.test.ts > balance series > 3M has 91 daily points ending at today's balance 2ms
+ ✓ tests/unit/summary-budgets.test.ts > balance series > 1Y has 366 daily points ending at today's balance 1ms
+ ✓ tests/unit/summary-budgets.test.ts > budget utilization and states > is spent ÷ limit 1ms
+ ✓ tests/unit/summary-budgets.test.ts > budget utilization and states > warns at exactly 80% and at exactly 100% 1ms
+ ✓ tests/unit/summary-budgets.test.ts > budget utilization and states > handles a zero budget 0ms
+ ✓ tests/unit/summary-budgets.test.ts > budget utilization and states > reports spent, remaining and overage per category 7ms
+ ✓ tests/unit/summary-budgets.test.ts > budget utilization and states > category spend counts expenses only 0ms
+ ✓ tests/unit/summary-budgets.test.ts > spending card rows > shows the top 4 plus Everything else, widths relative to the largest row 1ms
+ ✓ tests/unit/summary-budgets.test.ts > spending card rows > lets Everything else be the largest row 16ms
+ ✓ tests/unit/summary-budgets.test.ts > spending card rows > omits Everything else when there are 4 or fewer categories, and handles empty 0ms
+ ✓ tests/unit/summary-budgets.test.ts > cash flow bars > money in is 100%, money out is out ÷ in capped at 100% 0ms
+ ✓ tests/unit/summary-budgets.test.ts > cash flow bars > handles no income 0ms
+ ✓ tests/unit/readability.test.ts > checkReadability > passes the reference shapes from the spec 5ms
+ ✓ tests/unit/readability.test.ts > checkReadability > flags the old dense shape: no bold first line, a figure-packed sentence and paragraph 1ms
+ ✓ tests/unit/readability.test.ts > checkReadability > counts sentences without splitting decimals or money 2ms
+ ✓ tests/unit/readability.test.ts > checkReadability > counts figures ($, −$, %, percent) and allows two per sentence 1ms
+ ✓ tests/unit/readability.test.ts > checkReadability > checks sentences inside bullets but not table rows 0ms
+ ✓ tests/unit/readability.test.ts > checkReadability > flags a long first line, ISO dates, and long text with no list or table 1ms
+ ✓ tests/unit/readability.test.ts > ensureBoldLead > bolds the first sentence when the first line has no bold, changing no words or figures 1ms
+ ✓ tests/unit/readability.test.ts > ensureBoldLead > leaves replies that already lead with bold, a list or a table alone 0ms
+ ✓ tests/unit/money-dates.test.ts > formatUSD > formats cents with grouping and two decimals 2ms
+ ✓ tests/unit/money-dates.test.ts > formatUSD > uses a true minus sign for negatives and optional plus 0ms
+ ✓ tests/unit/money-dates.test.ts > formatUSD > rounds half up when dropping cents 0ms
+ ✓ tests/unit/money-dates.test.ts > formatUSD > rejects non-integer money 1ms
+ ✓ tests/unit/money-dates.test.ts > roundUpTo > rounds up to the nearest $5 0ms
+ ✓ tests/unit/money-dates.test.ts > roundUpTo > returns 0 for zero or negative amounts 0ms
+ ✓ tests/unit/money-dates.test.ts > dates > adds days across month, year and leap-day boundaries 1ms
+ ✓ tests/unit/money-dates.test.ts > dates > adds months across year boundaries 0ms
+ ✓ tests/unit/money-dates.test.ts > dates > counts days between dates 0ms
+ ✓ tests/unit/money-dates.test.ts > dates > extracts days and months 0ms
+ ✓ tests/unit/money-dates.test.ts > dates > finds the next salary date (14th; on the 14th itself it is next month) 0ms
+ ✓ tests/unit/money-dates.test.ts > dates > formats display dates 0ms
+ ✓ tests/unit/money-dates.test.ts > shared date/time labels (no locale dependence) > formats days as 'Tue 20 Oct' and pairs iso + label 1ms
+ ✓ tests/unit/money-dates.test.ts > shared date/time labels (no locale dependence) > formats real-clock times identically everywhere, in UTC 0ms
+ ✓ tests/unit/category-history.test.ts > pace > day 1, 15 and 31 of a 31-day month 3ms
+ ✓ tests/unit/category-history.test.ts > pace > on_pace and projections through the domain function 2ms
+ ✓ tests/unit/category-history.test.ts > suggestions (rounded up to $10) > chronically over → meet halfway 1ms
+ ✓ tests/unit/category-history.test.ts > suggestions (rounded up to $10) > consistently under → max(avg × 1.15, 70% of limit) 0ms
+ ✓ tests/unit/category-history.test.ts > suggestions (rounded up to $10) > on track → keep the limit 0ms
+ ✓ tests/unit/category-history.test.ts > suggestions (rounded up to $10) > fixed → keep, unless next month's known bills exceed it 0ms
+ ✓ tests/unit/category-history.test.ts > suggestions (rounded up to $10) > never cuts an essential category 0ms
+ ✓ tests/unit/category-history.test.ts > suggestions (rounded up to $10) > uses next month's stored limit as the base and totals the difference 0ms
+ ✓ tests/unit/category-history.test.ts > paceLine > ahead of pace beats history; history shows when two or more months were over 0ms
+ ✓ tests/unit/category-history.test.ts > seed > gives a deterministic plan where nothing on pace or essential is cut 5ms
+ ✓ tests/unit/message-content.test.ts > MessageContent (B2.2) > never renders raw HTML: an img/onerror payload and a <script> merchant come out as text 91ms
+ ✓ tests/unit/message-content.test.ts > MessageContent (B2.2) > renders links and images as plain text (no navigation) 14ms
+ ✓ tests/unit/message-content.test.ts > MessageContent (B2.2) > renders GFM tables in a scroll wrapper, amounts right-aligned in tabular digits 15ms
+ ✓ tests/unit/message-content.test.ts > MessageContent (B2.2) > renders bold, lists (including a label line directly above a list) and headings as bold labels 10ms
+
+ Test Files  21 passed (21)
+      Tests  276 passed (276)
+   Start at  09:59:31
+   Duration  53.57s (tests 85%, import 11%, transform 4%)
+
+    Isolate  21 workers spawned · ~3.25s startup each (spawn + environment, per file)
+             at least ~6.50s faster with isolate: false — reuses workers across files instead of one per file
+

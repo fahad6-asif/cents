@@ -1,0 +1,124 @@
+# End-to-end browser tests on PRODUCTION (desktop 1360px + mobile 375px), including live-AI tests
+# Run: 2026-10-20T05:00:44Z | commit d717e78 | target: https://cents-iota.vercel.app
+# Command: RUN_LLM_E2E=1 BASE_URL=https://cents-iota.vercel.app npx playwright test --grep-invert 'chat rate limit' --reporter=list
+
+# Skipped on production by design: '9. chat rate limit' (it seeds 30 rows into the shared database and would use 30 of the day's 500 live chat messages; it passes locally, see unit-api-security.txt for the rate-limit unit tests).
+
+
+Running 96 tests using 4 workers
+
+(node:20696) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:32852) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:19340) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:20044) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  4 [desktop] › tests\e2e\addendum-a3.spec.ts:3:5 › Bills page shows the usual-amount line for each upcoming bill (9.7s)
+  ok  2 [desktop] › tests\e2e\addendum-a4.spec.ts:44:5 › badge states: verified line, amber partial line that reveals the unverified figure, nothing without figures (13.4s)
+  ok  5 [desktop] › tests\e2e\addendum-a3.spec.ts:14:5 › Analyze my bills chip is on the dashboard (3.9s)
+  ok  1 [desktop] › tests\e2e\addendum-a5.spec.ts:6:5 › receipts panel: expands, matches this message's tool_calls, carries no IDs or secrets (19.7s)
+  ok  3 [desktop] › tests\e2e\addendum-a0.spec.ts:5:5 › every Simulate menu row is a menuitem and one click fires exactly one POST /api/simulate (21.2s)
+  ok  6 [desktop] › tests\e2e\addendum-a4.spec.ts:77:7 › live model › the $900 answer is verified by the server and the badge persists after reload (8.1s)
+  ok  8 [desktop] › tests\e2e\addendum-a7.spec.ts:3:5 › Budgets page shows a pace / history line under each current-month bar (no LLM) (8.7s)
+  ok  7 [desktop] › tests\e2e\addendum-a6.spec.ts:10:5 › the agent fixes an overrun the rule engine can't, across October and November (15.6s)
+  ok 10 [desktop] › tests\e2e\approval.spec.ts:13:7 › Approval workflow over HTTP › Worth a look: Move $25 to Dining → approve → limit $325, overrun resolved, duplicate blocked (9.3s)
+  ok 12 [desktop] › tests\e2e\custom-txn.spec.ts:22:5 › the menu keeps the 6 presets on top and adds Custom transaction… above Reset demo (2.0s)
+  ok 11 [desktop] › tests\e2e\chat.spec.ts:6:5 › chip sends a question; the grounded answer renders in the centered chatbox and persists (7.2s)
+  ok 13 [desktop] › tests\e2e\approval.spec.ts:43:7 › Approval workflow over HTTP › reject leaves every budget byte-identical (both months) (5.8s)
+  ok 15 [desktop] › tests\e2e\chat.spec.ts:24:5 › Enter sends, Shift+Enter adds a newline (4.7s)
+  ok  9 [desktop] › tests\e2e\addendum-a0.spec.ts:19:5 › no hydration or console errors after approving a proposal and reloading (19.6s)
+  ok 14 [desktop] › tests\e2e\custom-txn.spec.ts:29:5 › dialog: validation, live preview tones, Esc closes and focus returns to Simulate (10.4s)
+  ok 18 [desktop] › tests\e2e\addendum-a0.spec.ts:37:5 › Insights fact chips are human labels and real-clock times are labelled (2.2s)
+  ok 16 [desktop] › tests\e2e\approval.spec.ts:54:7 › Approval workflow over HTTP › another session cannot read, approve or reject the proposal (404) (5.9s)
+  ok 20 [desktop] › tests\e2e\overview.spec.ts:12:7 › Overview › renders real data with one consistent net figure and no console errors (3.6s)
+  ok 21 [desktop] › tests\e2e\approval.spec.ts:68:7 › Approval workflow over HTTP › malformed ids are 404, not errors (4.1s)
+  ok 17 [desktop] › tests\e2e\chat.spec.ts:34:5 › Ask assistant on the Worth a look card sends a question about the alert (7.2s)
+  ok 22 [desktop] › tests\e2e\overview.spec.ts:32:7 › Overview › range tabs switch the balance series (3.2s)
+  ok 19 [desktop] › tests\e2e\custom-txn.spec.ts:73:5 › adding a custom expense with AI off updates the dashboard and makes no impact call (9.3s)
+  ok 23 [desktop] › tests\e2e\pages.spec.ts:16:7 › overview: real data, active nav, no console errors, no horizontal scroll (4.3s)
+  ok 25 [desktop] › tests\e2e\overview.spec.ts:46:7 › Overview › has no horizontal page scroll (2.1s)
+  ok 28 [desktop] › tests\e2e\readability.spec.ts:26:5 › XSS: an <img onerror> reply and a <script> merchant render as plain text (3.9s)
+  ok 24 [desktop] › tests\e2e\chat.spec.ts:41:5 › Plan next month's budget → approval card in the thread → Reject changes nothing (9.1s)
+  ok 27 [desktop] › tests\e2e\pages.spec.ts:16:7 › transactions: real data, active nav, no console errors, no horizontal scroll (5.3s)
+  ok 26 [desktop] › tests\e2e\custom-txn.spec.ts:96:5 › if the impact note fails, the dashboard still updates and a muted line explains it (7.6s)
+  ok 29 [desktop] › tests\e2e\readability.spec.ts:40:5 › a wide table scrolls inside its own wrapper, never the page (3.4s)
+  ok 31 [desktop] › tests\e2e\pages.spec.ts:16:7 › budgets: real data, active nav, no console errors, no horizontal scroll (4.4s)
+  ok 30 [desktop] › tests\e2e\security.spec.ts:36:5 › 1–3. approve: unknown/foreign 404, rejected 409, concurrent duplicates apply once (5.4s)
+  ok 33 [desktop] › tests\e2e\simulate.spec.ts:7:7 › POST /api/simulate › rejects invalid input with 400 and changes nothing (4.3s)
+  ok 34 [desktop] › tests\e2e\pages.spec.ts:16:7 › budgets-next: real data, active nav, no console errors, no horizontal scroll (4.1s)
+  ok 36 [desktop] › tests\e2e\simulate.spec.ts:27:7 › POST /api/simulate › replaying an idempotency key returns the original without inserting again (2.9s)
+  ok 32 [desktop] › tests\e2e\custom-txn.spec.ts:111:7 › live impact note › custom expense → dashboard update → one impact note with the chip, verified, with receipts (8.8s)
+  ok 35 [desktop] › tests\e2e\security.spec.ts:53:5 › 4. invalid inputs to every write endpoint → 400/404, never 500 (5.9s)
+  ok 37 [desktop] › tests\e2e\pages.spec.ts:16:7 › bills: real data, active nav, no console errors, no horizontal scroll (5.1s)
+(node:27204) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 38 [desktop] › tests\e2e\simulate.spec.ts:46:7 › Simulate in the UI › restaurant → overrun with 'Move $25 to Dining'; Not now dismisses; reset restores (7.7s)
+  ok 40 [desktop] › tests\e2e\pages.spec.ts:16:7 › insights: real data, active nav, no console errors, no horizontal scroll (5.3s)
+(node:31380) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 41 [mobile] › tests\e2e\addendum-a0.spec.ts:5:5 › every Simulate menu row is a menuitem and one click fires exactly one POST /api/simulate (6.1s)
+  ok 39 [desktop] › tests\e2e\security.spec.ts:72:5 › 8. no secrets in API responses, error responses or page HTML (11.7s)
+  ok 42 [desktop] › tests\e2e\pages.spec.ts:16:7 › assistant: real data, active nav, no console errors, no horizontal scroll (3.8s)
+  ok 43 [mobile] › tests\e2e\addendum-a3.spec.ts:3:5 › Bills page shows the usual-amount line for each upcoming bill (1.9s)
+  ok 47 [mobile] › tests\e2e\addendum-a3.spec.ts:14:5 › Analyze my bills chip is on the dashboard (2.2s)
+  ok 46 [desktop] › tests\e2e\pages.spec.ts:16:7 › settings: real data, active nav, no console errors, no horizontal scroll (3.5s)
+  ok 48 [mobile] › tests\e2e\addendum-a4.spec.ts:44:5 › badge states: verified line, amber partial line that reveals the unverified figure, nothing without figures (2.9s)
+  -  50 [mobile] › tests\e2e\addendum-a4.spec.ts:77:7 › live model › the $900 answer is verified by the server and the badge persists after reload
+  ok 49 [desktop] › tests\e2e\pages.spec.ts:44:5 › transactions filters: month, category and search narrow the list (3.3s)
+  ok 45 [desktop] › tests\e2e\security.spec.ts:101:5 › 10. session B cannot read or change session A's data through any endpoint (7.5s)
+  ok 44 [mobile] › tests\e2e\addendum-a0.spec.ts:19:5 › no hydration or console errors after approving a proposal and reloading (10.9s)
+  ok 52 [desktop] › tests\e2e\pages.spec.ts:59:5 › budgets page: approving the pending proposal updates the list (4.0s)
+  ok 54 [mobile] › tests\e2e\addendum-a0.spec.ts:37:5 › Insights fact chips are human labels and real-clock times are labelled (2.4s)
+  ok 53 [desktop] › tests\e2e\security.spec.ts:131:5 › cross-site POSTs are blocked (CSRF defense on top of SameSite=Lax) (4.1s)
+  -  56 [mobile] › tests\e2e\addendum-a6.spec.ts:10:5 › the agent fixes an overrun the rule engine can't, across October and November
+  ok 55 [desktop] › tests\e2e\pages.spec.ts:70:5 › evidence export downloads this session's JSON (2.1s)
+(node:23056) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 51 [mobile] › tests\e2e\addendum-a5.spec.ts:6:5 › receipts panel: expands, matches this message's tool_calls, carries no IDs or secrets (10.1s)
+  ok 57 [desktop] › tests\e2e\security.spec.ts:146:5 › security headers and cookie flags (6.4s)
+  ok 58 [mobile] › tests\e2e\addendum-a7.spec.ts:3:5 › Budgets page shows a pace / history line under each current-month bar (no LLM) (6.6s)
+  ok 61 [mobile] › tests\e2e\overview.spec.ts:12:7 › Overview › renders real data with one consistent net figure and no console errors (3.0s)
+(node:32808) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 60 [mobile] › tests\e2e\chat.spec.ts:6:5 › chip sends a question; the grounded answer renders in the centered chatbox and persists (6.5s)
+  ok 59 [mobile] › tests\e2e\approval.spec.ts:13:7 › Approval workflow over HTTP › Worth a look: Move $25 to Dining → approve → limit $325, overrun resolved, duplicate blocked (7.6s)
+  ok 64 [mobile] › tests\e2e\custom-txn.spec.ts:22:5 › the menu keeps the 6 presets on top and adds Custom transaction… above Reset demo (2.0s)
+  ok 62 [mobile] › tests\e2e\overview.spec.ts:32:7 › Overview › range tabs switch the balance series (3.3s)
+  ok 67 [mobile] › tests\e2e\overview.spec.ts:46:7 › Overview › has no horizontal page scroll (2.0s)
+  ok 63 [mobile] › tests\e2e\chat.spec.ts:24:5 › Enter sends, Shift+Enter adds a newline (5.6s)
+  ok 66 [mobile] › tests\e2e\custom-txn.spec.ts:29:5 › dialog: validation, live preview tones, Esc closes and focus returns to Simulate (3.8s)
+  ok 65 [mobile] › tests\e2e\approval.spec.ts:43:7 › Approval workflow over HTTP › reject leaves every budget byte-identical (both months) (5.5s)
+  ok 68 [mobile] › tests\e2e\pages.spec.ts:16:7 › overview: real data, active nav, no console errors, no horizontal scroll (5.0s)
+  ok 69 [mobile] › tests\e2e\chat.spec.ts:34:5 › Ask assistant on the Worth a look card sends a question about the alert (5.9s)
+  ok 71 [mobile] › tests\e2e\approval.spec.ts:54:7 › Approval workflow over HTTP › another session cannot read, approve or reject the proposal (404) (6.1s)
+  ok 70 [mobile] › tests\e2e\custom-txn.spec.ts:73:5 › adding a custom expense with AI off updates the dashboard and makes no impact call (7.3s)
+  ok 72 [mobile] › tests\e2e\pages.spec.ts:16:7 › transactions: real data, active nav, no console errors, no horizontal scroll (4.3s)
+  ok 74 [mobile] › tests\e2e\approval.spec.ts:68:7 › Approval workflow over HTTP › malformed ids are 404, not errors (2.5s)
+  ok 77 [mobile] › tests\e2e\readability.spec.ts:26:5 › XSS: an <img onerror> reply and a <script> merchant render as plain text (2.7s)
+  ok 76 [mobile] › tests\e2e\pages.spec.ts:16:7 › budgets: real data, active nav, no console errors, no horizontal scroll (4.5s)
+  ok 75 [mobile] › tests\e2e\custom-txn.spec.ts:96:5 › if the impact note fails, the dashboard still updates and a muted line explains it (6.0s)
+  ok 78 [mobile] › tests\e2e\readability.spec.ts:40:5 › a wide table scrolls inside its own wrapper, never the page (2.5s)
+  ok 73 [mobile] › tests\e2e\chat.spec.ts:41:5 › Plan next month's budget → approval card in the thread → Reject changes nothing (8.9s)
+  -  82 [mobile] › tests\e2e\security.spec.ts:36:5 › 1–3. approve: unknown/foreign 404, rejected 409, concurrent duplicates apply once
+  -  83 [mobile] › tests\e2e\security.spec.ts:53:5 › 4. invalid inputs to every write endpoint → 400/404, never 500
+  -  84 [mobile] › tests\e2e\security.spec.ts:72:5 › 8. no secrets in API responses, error responses or page HTML
+  -  85 [mobile] › tests\e2e\security.spec.ts:101:5 › 10. session B cannot read or change session A's data through any endpoint
+  -  86 [mobile] › tests\e2e\security.spec.ts:131:5 › cross-site POSTs are blocked (CSRF defense on top of SameSite=Lax)
+  -  87 [mobile] › tests\e2e\security.spec.ts:146:5 › security headers and cookie flags
+  ok 79 [mobile] › tests\e2e\pages.spec.ts:16:7 › budgets-next: real data, active nav, no console errors, no horizontal scroll (7.7s)
+  ok 81 [mobile] › tests\e2e\simulate.spec.ts:7:7 › POST /api/simulate › rejects invalid input with 400 and changes nothing (6.1s)
+  ok 89 [mobile] › tests\e2e\simulate.spec.ts:27:7 › POST /api/simulate › replaying an idempotency key returns the original without inserting again (2.7s)
+  ok 80 [mobile] › tests\e2e\custom-txn.spec.ts:111:7 › live impact note › custom expense → dashboard update → one impact note with the chip, verified, with receipts (10.5s)
+  ok 88 [mobile] › tests\e2e\pages.spec.ts:16:7 › bills: real data, active nav, no console errors, no horizontal scroll (4.0s)
+  ok 90 [mobile] › tests\e2e\simulate.spec.ts:46:7 › Simulate in the UI › restaurant → overrun with 'Move $25 to Dining'; Not now dismisses; reset restores (7.1s)
+  ok 91 [mobile] › tests\e2e\pages.spec.ts:16:7 › insights: real data, active nav, no console errors, no horizontal scroll (6.1s)
+  ok 92 [mobile] › tests\e2e\pages.spec.ts:16:7 › assistant: real data, active nav, no console errors, no horizontal scroll (3.9s)
+  ok 93 [mobile] › tests\e2e\pages.spec.ts:16:7 › settings: real data, active nav, no console errors, no horizontal scroll (3.7s)
+  ok 94 [mobile] › tests\e2e\pages.spec.ts:44:5 › transactions filters: month, category and search narrow the list (3.4s)
+  ok 95 [mobile] › tests\e2e\pages.spec.ts:59:5 › budgets page: approving the pending proposal updates the list (3.5s)
+  ok 96 [mobile] › tests\e2e\pages.spec.ts:70:5 › evidence export downloads this session's JSON (3.2s)
+
+  8 skipped
+  88 passed (2.7m)

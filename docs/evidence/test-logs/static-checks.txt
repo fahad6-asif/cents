@@ -1,0 +1,50 @@
+# Static checks: typecheck, lint, production build, client-bundle secret scan
+# Run: 2026-10-20T04:58:02Z | commit d717e78 | target: local
+# Command: npm run typecheck; npx eslint src tests scripts; npx next build; npm run scan:bundle
+
+
+Generating route types...
+✓ Types generated successfully
+--- lint
+(no output = no lint problems)
+--- build
+  Generating static pages using 7 workers (5/21) 
+  Generating static pages using 7 workers (10/21) 
+  Generating static pages using 7 workers (15/21) 
+✓ Generating static pages using 7 workers (21/21) in 1171ms
+  Finalizing page optimization ...
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /api/actions/[id]
+├ ƒ /api/actions/[id]/approve
+├ ƒ /api/actions/[id]/reject
+├ ƒ /api/alerts
+├ ƒ /api/alerts/[id]/dismiss
+├ ƒ /api/bills
+├ ƒ /api/budgets
+├ ƒ /api/chat
+├ ƒ /api/chat/impact
+├ ƒ /api/evidence
+├ ƒ /api/overview
+├ ƒ /api/reset
+├ ƒ /api/simulate
+├ ƒ /api/transactions
+├ ƒ /assistant
+├ ƒ /bills
+├ ƒ /budgets
+├ ƒ /insights
+├ ○ /robots.txt
+├ ƒ /settings
+└ ƒ /transactions
+ƒ Proxy (Middleware)
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+--- bundle scan
+clean  OpenRouter key prefix sk-or-
+clean  OPENROUTER_API_KEY value
+clean  DATABASE_URL value
+clean  DATABASE_URL_UNPOOLED value
+clean  database password
+clean  database host
+scanned 29 files in .next/static
