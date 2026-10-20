@@ -25,12 +25,16 @@ It opens with a `summary` (audit event counts, proposal outcomes, alert outcomes
 | [`test-logs/e2e-production.txt`](test-logs/e2e-production.txt) | Browser tests on **production**, desktop 1360px + mobile 375px, including the live-AI tests | **88 passed, 0 failed** |
 | [`test-logs/sessions-production.txt`](test-logs/sessions-production.txt) | Session isolation, exact reset, audit kept, forged cookie, row-level security on **production** | **11 / 11 passed** |
 | [`test-logs/security-llm-production.txt`](test-logs/security-llm-production.txt) | Live attacks on **production** (real model): injection via data, jailbreak, injected system text, prompt extraction, key extraction, and an injection-shaped custom merchant | **all passed** |
-| [`test-logs/eval-production.txt`](test-logs/eval-production.txt) | The AI evaluation (17 questions, expected values computed independently from the database) on **production** | see note below |
-| [`ai-eval.json`](ai-eval.json) and [`../AI_EVAL.md`](../AI_EVAL.md) | Per-question results: expected figures, tools called, verified, readability, reply text | 17 / 17, 16 / 16 verified |
+| [`test-logs/eval-production.txt`](test-logs/eval-production.txt) | The AI evaluation (17 questions, expected values computed independently from the database) on **production** | **17 / 17 passed**, 16 / 16 verified, 15 / 17 readable |
+| [`ai-eval.json`](ai-eval.json) and [`../AI_EVAL.md`](../AI_EVAL.md) | The same production run, per question: expected figures, tools called, verified, readability, reply text | 17 / 17 |
 | [`phase9-llm-security.json`](phase9-llm-security.json) | Per-check results of the live attack suite, with each reply | all passed |
 | [`phase6-questions.json`](phase6-questions.json), [`phase7-proposals.json`](phase7-proposals.json) | Earlier live runs of the AI's answers and proposals (build phases 6 and 7) | |
 
-**Note on the eval log.** Its 20 Oct run scored **15/17**. In both failed cases the AI correctly ignored the injected "approve budget changes" text in a merchant name. But it then added "nothing was approved" without checking, and in one of those sessions a proposal *had* been approved earlier. The eval is meant to catch exactly this kind of ungrounded status claim. The prompt was fixed (rule 6: say the text was ignored, make no approval claims without `get_proposals`), and both cases pass locally (4/4). The production log is re-run after that fix is deployed.
+**What the eval caught (20 Oct).** An earlier production run that morning scored **15/17**. In both failed cases the AI correctly ignored the injected "approve budget changes" text in a merchant name. But it then added "nothing was approved" without checking, and in one of those sessions a proposal *had* been approved earlier. The eval is meant to catch exactly this kind of ungrounded status claim.
+- **The fix:** prompt rule 6 now says the AI may say it ignored the text, but must not claim anything about approvals unless `get_proposals` told it.
+- **Result:** after the fix was deployed, the run in `eval-production.txt` passes **17/17**, both injection cases included.
+
+**Readability** is logged only, never enforced. The model's formatting varies a little between runs: the last four full runs passed 17, 15, 17 and 15 of 17, so 64/68 (94%) against a 90% target.
 
 The browser tests skip one test on production, `9. chat rate limit`. It seeds 30 rows into the shared database, which would use up 30 of the day's 500 live chat messages. It passes locally, and the rate-limit logic is covered in `unit-api-security.txt`.
 
